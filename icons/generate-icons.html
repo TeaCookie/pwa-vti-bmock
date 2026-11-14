@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Icon Generator - Indicator Lights PWA</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0d0d1a;
+      color: #e8e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+    h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+    .generator {
+      background: #16162d;
+      border: 1px solid #2a2a4a;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 100%;
+    }
+    .preview {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .preview img { max-width: 100%; height: auto; border-radius: 8px; }
+    .sizes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .size-btn {
+      background: #1a1a35;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 1rem;
+      color: #e8e8f0;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .size-btn:hover {
+      border-color: #007bff;
+      background: #1a2a4a;
+    }
+    .size-btn:active { transform: scale(0.98); }
+    .size-btn.generated {
+      border-color: #00d4ff;
+      background: rgba(0, 212, 255, 0.1);
+    }
+    .size-label { font-weight: 600; }
+    .size-desc { font-size: 0.75rem; color: #8888a0; }
+    .generate-all {
+      width: 100%;
+      background: linear-gradient(90deg, #007bff, #00d4ff);
+      border: none;
+      border-radius: 8px;
+      padding: 1rem;
+      color: white;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+    .generate-all:hover { opacity: 0.9; }
+    .generate-all:active { opacity: 1; transform: scale(0.98); }
+    .status {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid #00d4ff;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      min-height: 1.5rem;
+    }
+    .download-all {
+      width: 100%;
+      background: transparent;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 1rem;
+      color: #e8e8f0;
+      font-family: inherit;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    .download-all:hover { border-color: #8888a0; }
+    .download-all:disabled { opacity: 0.5; cursor: not-allowed; }
+    .instructions {
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid #ffd700;
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    .instructions strong { color: #ffd700; }
+  </style>
+</head>
+<body>
+  <h1>PWA Icon Generator</h1>
+
+  <div class="generator">
+    <div class="preview">
+      <img id="svgPreview" src="icon.svg" alt="Icon preview" width="200" height="200">
+    </div>
+
+    <div class="sizes-grid" id="sizesGrid"></div>
+
+    <button class="generate-all" id="generateAll">Generate All PNG Icons</button>
+    <button class="download-all" id="downloadAll" disabled>Download All as ZIP</button>
+
+    <div class="status" id="status">Ready to generate icons from icon.svg</div>
+
+    <div class="instructions">
+      <strong>How to use:</strong>
+      <ol style="margin: 0.5rem 0 0 1.5rem;">
+        <li>Click "Generate All PNG Icons" to create all required sizes</li>
+        <li>Click "Download All as ZIP" to save them to your computer</li>
+        <li>Extract the ZIP into the <code>icons/</code> folder</li>
+        <li>Deploy to Netlify</li>
+      </ol>
+      <p style="margin-top: 0.5rem;">The SVG icon is already referenced in manifest.json and works in modern browsers. PNG icons are for maximum compatibility with older devices.</p>
+    </div>
+  </div>
+
+  <script>
+    const sizes = [
+      { size: 72, desc: 'Android legacy' },
+      { size: 96, desc: 'Android legacy' },
+      { size: 128, desc: 'Chrome Web Store' },
+      { size: 144, desc: 'Android splash' },
+      { size: 152, desc: 'iOS iPad' },
+      { size: 192, desc: 'Android home screen' },
+      { size: 384, desc: 'Android splash' },
+      { size: 512, desc: 'Play Store / Splash' }
+    ];
+
+    const svgImage = document.getElementById('svgPreview');
+    const sizesGrid = document.getElementById('sizesGrid');
+    const generateAllBtn = document.getElementById('generateAll');
+    const downloadAllBtn = document.getElementById('downloadAll');
+    const statusEl = document.getElementById('status');
+
+    const generatedCanvases = new Map();
+    let allGenerated = false;
+
+    // Create size buttons
+    sizes.forEach(({ size, desc }) => {
+      const btn = document.createElement('button');
+      btn.className = 'size-btn';
+      btn.dataset.size = size;
+      btn.innerHTML = `
+        <span class="size-label">${size}×${size}</span>
+        <span class="size-desc">${desc}</span>
+      `;
+      btn.addEventListener('click', () => generateSingle(size));
+      sizesGrid.appendChild(btn);
+    });
+
+    // Generate single size
+    function generateSingle(size) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      // Draw SVG to canvas
+      ctx.drawImage(svgImage, 0, 0, size, size);
+
+      generatedCanvases.set(size, canvas);
+
+      // Update button
+      const btn = document.querySelector(`[data-size="${size}"]`);
+      btn.classList.add('generated');
+
+      statusEl.textContent = `Generated ${size}×${size} icon`;
+
+      checkAllGenerated();
+    }
+
+    // Generate all sizes
+    generateAllBtn.addEventListener('click', () => {
+      sizes.forEach(({ size }) => generateSingle(size));
+      allGenerated = true;
+    });
+
+    // Check if all generated
+    function checkAllGenerated() {
+      if (generatedCanvases.size === sizes.length) {
+        downloadAllBtn.disabled = false;
+        statusEl.textContent = 'All icons generated! Click "Download All as ZIP" to save.';
+      }
+    }
+
+    // Download all as ZIP
+    downloadAllBtn.addEventListener('click', async () => {
+      // Dynamic import of JSZip
+      const JSZip = (await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm')).default;
+      const zip = new JSZip();
+
+      const iconsFolder = zip.folder('icons');
+
+      generatedCanvases.forEach((canvas, size) => {
+        canvas.toBlob((blob) => {
+          iconsFolder.file(`icon-${size}.png`, blob);
+        }, 'image/png');
+      });
+
+      // Also include the SVG
+      fetch('icon.svg')
+        .then(res => res.text())
+        .then(svgText => {
+          iconsFolder.file('icon.svg', svgText);
+        });
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pwa-icons.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+
+      statusEl.textContent = 'ZIP downloaded! Extract into the icons/ folder.';
+    });
+  </script>
+</body>
+</html>
