@@ -1,0 +1,866 @@
+/* CSS Custom Properties for theming - Flat LED Indicator Style */
+:root {
+  --bg-color: #1a1a2e;
+  --panel-bg: #16162d;
+  --panel-border: #2a2a4a;
+  --text-primary: #e8e8f0;
+  --text-muted: #8888a0;
+  --label-color: #666688;
+
+  /* Blue LED - split halves */
+  --blue-left-on: #24E0FF;
+  --blue-left-inset: #006;
+  --blue-left-glow: #3F8CFF;
+  --blue-left-off: #1a1a3a;
+  --blue-left-off-inset: #0a0a2a;
+
+  --blue-right-on: #007bff;
+  --blue-right-inset: #003d80;
+  --blue-right-glow: #007bff;
+  --blue-right-off: #1a1a3a;
+  --blue-right-off-inset: #0a0a2a;
+
+  /* Yellow LED */
+  --yellow-on: #FF0;
+  --yellow-inset: #808002;
+  --yellow-glow: #FF0;
+  --yellow-off: #3d3d00;
+  --yellow-off-inset: #1a1a00;
+
+  /* Red LED */
+  --red-on: #F00;
+  --red-inset: #441313;
+  --red-glow: rgba(255,0,0,0.5);
+  --red-off: #3d0000;
+  --red-off-inset: #1a0000;
+
+  /* LED sizing */
+  --led-size: 80px;
+  --led-border-radius: 50%;
+  --led-gap: 2rem;
+
+  /* Terminal */
+  --terminal-bg: #0d0d1a;
+  --terminal-border: #2a2a4a;
+  --terminal-text: #00ff88;
+  --terminal-dim: #668866;
+
+  /* Log Table */
+  --log-header-bg: #1a1a35;
+  --log-entry-bg: #16162d;
+  --log-entry-hover: #1e1e3a;
+  --log-border: #2a2a4a;
+
+  /* Modal */
+  --modal-bg: #1a1a35;
+  --modal-border: #007bff;
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(36, 224, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(255, 255, 0, 0.02) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(255, 0, 0, 0.02) 0%, transparent 50%);
+}
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 100vh;
+}
+
+/* Header with Clock */
+header {
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+h1 {
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  text-shadow: 0 0 20px rgba(36, 224, 255, 0.3);
+  margin-bottom: 0.5rem;
+}
+
+.clock {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 500;
+  color: var(--blue-left-on);
+  text-shadow: 0 0 10px var(--blue-left-glow);
+  letter-spacing: 0.1em;
+}
+
+/* Main Layout - Desktop: Lights + Terminal side by side */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Lights Panel */
+.lights-panel {
+  display: flex;
+  flex-direction: row;
+  gap: var(--led-gap);
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 1rem 0;
+}
+
+.light-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Base LED Styles - Flat Circular Indicator */
+.led {
+  position: relative;
+  width: var(--led-size);
+  height: var(--led-size);
+  border-radius: var(--led-border-radius);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  user-select: none;
+}
+
+.led:active {
+  transform: scale(0.95);
+}
+
+.led:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.2);
+  outline-offset: 4px;
+}
+
+/* LED Off State - Base styles for all LEDs when off */
+.led-blue-left,
+.led-blue-right,
+.led-yellow,
+.led-red {
+  background-color: var(--blue-left-off);
+  box-shadow:
+    rgba(0,0,0,0.4) 0 -1px 7px 1px,
+    inset var(--blue-left-off-inset) 0 -1px 9px,
+    rgba(0,0,0,0.3) 0 2px 8px;
+}
+
+/* Blue Left Half - Specific off state */
+.led-blue-left {
+  background-color: var(--blue-left-off);
+  box-shadow:
+    rgba(0,0,0,0.4) 0 -1px 7px 1px,
+    inset var(--blue-left-off-inset) 0 -1px 9px,
+    rgba(0,0,0,0.3) 0 2px 8px;
+}
+
+/* Blue Right Half - Specific off state */
+.led-blue-right {
+  background-color: var(--blue-right-off);
+  box-shadow:
+    rgba(0,0,0,0.4) 0 -1px 7px 1px,
+    inset var(--blue-right-off-inset) 0 -1px 9px,
+    rgba(0,0,0,0.3) 0 2px 8px;
+}
+
+/* Yellow - Off state */
+.led-yellow {
+  background-color: var(--yellow-off);
+  box-shadow:
+    rgba(0,0,0,0.4) 0 -1px 7px 1px,
+    inset var(--yellow-off-inset) 0 -1px 9px,
+    rgba(0,0,0,0.3) 0 2px 8px;
+}
+
+/* Red - Off state */
+.led-red {
+  background-color: var(--red-off);
+  box-shadow:
+    rgba(0,0,0,0.4) 0 -1px 7px 1px,
+    inset var(--red-off-inset) 0 -1px 9px,
+    rgba(0,0,0,0.3) 0 2px 8px;
+}
+
+/* LED On States */
+.led-blue-left.on {
+  background-color: var(--blue-left-on);
+  box-shadow:
+    rgba(0,0,0,0.2) 0 -1px 7px 1px,
+    inset var(--blue-left-inset) 0 -1px 9px,
+    var(--blue-left-glow) 0 2px 16px,
+    var(--blue-left-glow) 0 0 30px;
+}
+
+.led-blue-right.on {
+  background-color: var(--blue-right-on);
+  box-shadow:
+    rgba(0,0,0,0.2) 0 -1px 7px 1px,
+    inset var(--blue-right-inset) 0 -1px 9px,
+    var(--blue-right-glow) 0 2px 16px,
+    var(--blue-right-glow) 0 0 30px;
+}
+
+.led-yellow.on {
+  background-color: var(--yellow-on);
+  box-shadow:
+    rgba(0,0,0,0.2) 0 -1px 7px 1px,
+    inset var(--yellow-inset) 0 -1px 9px,
+    var(--yellow-glow) 0 2px 16px,
+    var(--yellow-glow) 0 0 30px;
+  animation: yellowPulse 2s ease-in-out infinite;
+}
+
+.led-red.on {
+  background-color: var(--red-on);
+  box-shadow:
+    rgba(0,0,0,0.2) 0 -1px 7px 1px,
+    inset var(--red-inset) 0 -1px 9px,
+    var(--red-glow) 0 2px 16px,
+    var(--red-glow) 0 0 30px;
+  animation: redPulse 1.5s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes yellowPulse {
+  0%, 100% {
+    box-shadow:
+      rgba(0,0,0,0.2) 0 -1px 7px 1px,
+      inset var(--yellow-inset) 0 -1px 9px,
+      var(--yellow-glow) 0 2px 16px,
+      var(--yellow-glow) 0 0 30px;
+  }
+  50% {
+    box-shadow:
+      rgba(0,0,0,0.2) 0 -1px 7px 1px,
+      inset var(--yellow-inset) 0 -1px 9px,
+      var(--yellow-glow) 0 2px 24px,
+      var(--yellow-glow) 0 0 50px;
+  }
+}
+
+@keyframes redPulse {
+  0%, 100% {
+    box-shadow:
+      rgba(0,0,0,0.2) 0 -1px 7px 1px,
+      inset var(--red-inset) 0 -1px 9px,
+      var(--red-glow) 0 2px 16px,
+      var(--red-glow) 0 0 30px;
+  }
+  50% {
+    box-shadow:
+      rgba(0,0,0,0.2) 0 -1px 7px 1px,
+      inset var(--red-inset) 0 -1px 9px,
+      var(--red-glow) 0 2px 28px,
+      var(--red-glow) 0 0 60px;
+  }
+}
+
+/* Blue Light Container - Split horizontal */
+.blue-light-container {
+  display: flex;
+  gap: 4px;
+}
+
+.blue-light-container .led {
+  width: calc((var(--led-size) - 4px) / 2);
+  height: var(--led-size);
+  border-radius: 16px;
+}
+
+/* Light Labels */
+.light-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--label-color);
+  text-transform: uppercase;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Terminal Component */
+.terminal {
+  background: var(--terminal-bg);
+  border: 1px solid var(--terminal-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 150px;
+  max-height: 300px;
+}
+
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--terminal-border);
+  background: rgba(255,255,255,0.02);
+}
+
+.terminal-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--terminal-text);
+}
+
+.terminal-toggle {
+  background: none;
+  border: none;
+  color: var(--terminal-dim);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.terminal-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--terminal-text);
+}
+
+.terminal-line {
+  margin-bottom: 0.25rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.terminal-line.command {
+  color: var(--yellow-on);
+}
+
+.terminal-line.output {
+  color: var(--terminal-text);
+}
+
+.terminal-line.error {
+  color: var(--red-on);
+}
+
+.terminal-line.info {
+  color: var(--blue-left-on);
+}
+
+.terminal-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--terminal-border);
+}
+
+.terminal-prompt {
+  color: var(--terminal-text);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--terminal-text);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+.terminal-input::placeholder {
+  color: var(--terminal-dim);
+}
+
+/* Log Table */
+.log-table {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+  min-height: 300px;
+}
+
+.log-column {
+  flex: 1;
+  min-width: 280px;
+  background: var(--panel-bg);
+  border: 1px solid var(--log-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.log-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--log-border);
+  background: var(--log-header-bg);
+  border-radius: 8px 8px 0 0;
+}
+
+.log-column-header h2 {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.log-column-header.blue h2 { color: var(--blue-left-on); }
+.log-column-header.yellow h2 { color: var(--yellow-on); }
+.log-column-header.red h2 { color: var(--red-on); }
+
+.log-add-btn {
+  background: none;
+  border: 1px solid var(--log-border);
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.log-add-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: var(--text-primary);
+}
+
+.log-entries {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.log-entry {
+  background: var(--log-entry-bg);
+  border: 1px solid var(--log-border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.log-entry:hover {
+  background: var(--log-entry-hover);
+  border-color: var(--panel-border);
+}
+
+.log-entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.log-entry-time {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.log-entry-state {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.log-entry-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.log-entry-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.log-entry-btn:hover {
+  border-color: var(--panel-border);
+  color: var(--text-primary);
+}
+
+.log-entry-btn.delete:hover {
+  border-color: var(--red-on);
+  color: var(--red-on);
+}
+
+.log-entry-content {
+  display: none;
+}
+
+.log-entry-state .state-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.log-entry-content .state-badge.blue-left { background: var(--blue-left-on); color: #000; }
+.log-entry-content .state-badge.blue-right { background: var(--blue-right-on); color: #000; }
+.log-entry-content .state-badge.blue-both { background: linear-gradient(90deg, var(--blue-left-on), var(--blue-right-on)); color: #000; }
+.log-entry-content .state-badge.yellow-on { background: var(--yellow-on); color: #000; }
+.log-entry-content .state-badge.yellow-off { background: var(--yellow-off); color: var(--yellow-on); border: 1px solid var(--yellow-on); }
+.log-entry-content .state-badge.red-on-to-off { background: var(--red-on); color: #000; }
+.log-entry-content .state-badge.red-off-to-on { background: var(--red-off); color: var(--red-on); border: 1px solid var(--red-on); }
+
+/* Modal */
+.log-modal {
+  background: var(--modal-bg);
+  border: 2px solid var(--modal-border);
+  border-radius: 12px;
+  padding: 0;
+  max-width: 400px;
+  width: 90%;
+  color: var(--text-primary);
+}
+
+.log-modal::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.modal-header h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.modal-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.form-group input[type="time"],
+.form-group select {
+  background: var(--bg-color);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  padding: 0.5rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.form-group input[type="time"]:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--blue-left-on);
+}
+
+.form-group fieldset {
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group fieldset legend {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0 0.5rem;
+}
+
+.form-group fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  text-transform: none;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.form-group fieldset input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--blue-left-on);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--panel-border);
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--blue-left-on);
+  color: #000;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: var(--panel-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--panel-border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--text-primary);
+}
+
+.btn-danger {
+  background: var(--red-off);
+  color: var(--red-on);
+  border: 1px solid var(--red-on);
+}
+
+.btn-danger:hover {
+  background: var(--red-on);
+  color: #000;
+}
+
+/* Footer */
+footer {
+  margin-top: auto;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.status-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .led,
+  .led-yellow.on,
+  .led-red.on {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --blue-left-on: #00ffff;
+    --blue-left-inset: #008080;
+    --blue-left-glow: #00ffff;
+    --blue-right-on: #0080ff;
+    --blue-right-inset: #004080;
+    --blue-right-glow: #0080ff;
+    --yellow-on: #ffff00;
+    --yellow-inset: #808000;
+    --yellow-glow: #ffff00;
+    --red-on: #ff0000;
+    --red-inset: #800000;
+    --red-glow: #ff0000;
+  }
+
+  .led {
+    border: 2px solid white;
+  }
+}
+
+/* Responsive Layout */
+
+/* Desktop: Terminal on right, lights on left */
+@media (min-width: 900px) {
+  .main-content {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .lights-panel {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .terminal {
+    width: 350px;
+    flex-shrink: 0;
+    height: 500px;
+    max-height: 500px;
+    min-height: 500px;
+  }
+
+  .log-table {
+    flex-direction: row;
+  }
+}
+
+/* Tablet: Stack terminal below lights, logs horizontal */
+@media (max-width: 899px) and (min-width: 600px) {
+  .main-content {
+    flex-direction: column;
+  }
+
+  .terminal {
+    max-height: 200px;
+    min-height: 150px;
+  }
+
+  .log-table {
+    flex-direction: row;
+  }
+}
+
+/* Mobile: Terminal between lights and logs, 6-line height */
+@media (max-width: 599px) {
+  :root {
+    --led-size: 60px;
+    --led-gap: 1rem;
+  }
+
+  .main-content {
+    flex-direction: column;
+  }
+
+  .lights-panel {
+    gap: 1rem;
+  }
+
+  .terminal {
+    min-height: 180px;
+    max-height: 180px;
+  }
+
+  .terminal-output {
+    max-height: 100px;
+  }
+
+  .log-table {
+    flex-direction: column;
+  }
+
+  .log-column {
+    min-width: 100%;
+  }
+
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  .clock {
+    font-size: 1.5rem;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 380px) {
+  :root {
+    --led-size: 50px;
+    --led-gap: 0.75rem;
+  }
+
+  .blue-light-container {
+    gap: 2px;
+  }
+
+  .log-entry {
+    padding: 0.5rem;
+  }
+}

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Flat LED Indicator Lights PWA with Logging">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>Indicator Lights</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Status Indicators</h1>
+      <div class="clock" id="clock" aria-live="polite" aria-label="Current time"></div>
+    </header>
+
+    <main class="lights-panel" role="region" aria-label="Indicator lights">
+      <!-- Blue Light - Split horizontally into two halves -->
+      <div class="light-wrapper">
+        <div class="blue-light-container" id="blueLight" role="group" aria-label="Blue indicator light, split into left and right halves">
+          <div class="led led-blue-left" id="blueLeft" data-side="left" tabindex="0" role="button" aria-label="Left half of blue light" aria-pressed="false"></div>
+          <div class="led led-blue-right" id="blueRight" data-side="right" tabindex="0" role="button" aria-label="Right half of blue light" aria-pressed="false"></div>
+        </div>
+        <div class="light-label">BLUE</div>
+      </div>
+
+      <!-- Yellow Light - Random toggle -->
+      <div class="light-wrapper">
+        <div class="led led-yellow" id="yellowLight" role="status" aria-live="polite" aria-label="Yellow indicator light, toggles randomly every 5-15 seconds"></div>
+        <div class="light-label">YELLOW</div>
+      </div>
+
+      <!-- Red Light - Click to toggle -->
+      <div class="light-wrapper">
+        <div class="led led-red" id="redLight" role="button" tabindex="0" aria-label="Red indicator light, click to toggle" aria-pressed="false"></div>
+        <div class="light-label">RED</div>
+      </div>
+    </main>
+
+    <!-- Terminal Component -->
+    <aside class="terminal" id="terminal" role="region" aria-label="Command terminal">
+      <div class="terminal-header">
+        <span class="terminal-title">TERMINAL</span>
+        <button class="terminal-toggle" id="terminalToggle" aria-label="Toggle terminal" aria-expanded="true">▼</button>
+      </div>
+      <div class="terminal-output" id="terminalOutput" role="log" aria-live="polite"></div>
+      <div class="terminal-input-wrapper">
+        <span class="terminal-prompt">></span>
+        <input type="text" class="terminal-input" id="terminalInput" placeholder="Enter command (help for list)" autocomplete="off" spellcheck="false">
+      </div>
+    </aside>
+
+    <!-- Logging Table -->
+    <section class="log-table" id="logTable" role="region" aria-label="Manual logging table">
+      <div class="log-column" id="blueLogColumn">
+        <header class="log-column-header blue">
+          <h2>BLUE LOG</h2>
+          <button class="log-add-btn" id="addBlueLog" aria-label="Add blue log entry">+</button>
+        </header>
+        <div class="log-entries" id="blueLogEntries" role="list"></div>
+      </div>
+
+      <div class="log-column" id="yellowLogColumn">
+        <header class="log-column-header yellow">
+          <h2>YELLOW LOG</h2>
+          <button class="log-add-btn" id="addYellowLog" aria-label="Add yellow log entry">+</button>
+        </header>
+        <div class="log-entries" id="yellowLogEntries" role="list"></div>
+      </div>
+
+      <div class="log-column" id="redLogColumn">
+        <header class="log-column-header red">
+          <h2>RED LOG</h2>
+          <button class="log-add-btn" id="addRedLog" aria-label="Add red log entry">+</button>
+        </header>
+        <div class="log-entries" id="redLogEntries" role="list"></div>
+      </div>
+    </section>
+
+    <footer>
+      <p class="status-text" id="statusText">Click lights to interact</p>
+    </footer>
+  </div>
+
+  <!-- Modal for log entry editing -->
+  <dialog id="logModal" class="log-modal">
+    <form method="dialog">
+      <header class="modal-header">
+        <h3 id="modalTitle">Add Entry</h3>
+        <button type="button" class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+      </header>
+      <div class="modal-body">
+        <input type="hidden" id="modalEntryId">
+        <input type="hidden" id="modalColumnType">
+
+        <div class="form-group" id="timeGroup">
+          <label for="modalTime">Time</label>
+          <input type="time" id="modalTime" step="60" required>
+        </div>
+
+        <div class="form-group" id="blueFields" style="display: none;">
+          <fieldset>
+            <legend>Blue Light State</legend>
+            <label><input type="checkbox" id="modalBlueLeft"> Left</label>
+            <label><input type="checkbox" id="modalBlueRight"> Right</label>
+          </fieldset>
+        </div>
+
+        <div class="form-group" id="yellowFields" style="display: none;">
+          <label><input type="checkbox" id="modalYellowOn"> Yellow On</label>
+        </div>
+
+        <div class="form-group" id="redFields" style="display: none;">
+          <label>
+            <select id="modalRedTransition">
+              <option value="on-to-off">On → Off</option>
+              <option value="off-to-on">Off → On</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="modalCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="modalSubmit">Save</button>
+        <button type="button" class="btn btn-danger" id="modalDelete" style="display: none;">Delete</button>
+      </footer>
+    </dialog>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.log('SW registration failed:', err));
+    }
+  </script>
+</body>
+</html>
