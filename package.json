@@ -1,0 +1,19 @@
+{
+  "name": "pwa-vti-bmock",
+  "version": "1.0.0",
+  "description": "Flat LED Indicator Lights PWA with Needle 3 WASM integration",
+  "type": "module",
+  "scripts": {
+    "dev": "npx netlify-cli dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "needle-rs": "latest",
+    "zod": "^3.22.0",
+    "vitest": "^1.0.0",
+    "typescript": "^5.0.0",
+    "@vitest/coverage-v8": "^1.0.0"
+  }
+}

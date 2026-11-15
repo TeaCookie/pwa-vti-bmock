@@ -16,7 +16,8 @@ const state = {
     red: []
   },
   terminalHistory: [],
-  terminalHistoryIndex: -1
+  terminalHistoryIndex: -1,
+  yellowTiming: { minMs: 5000, maxMs: 15000 }, // Default yellow timing
 };
 
 // ============================================
@@ -126,6 +127,19 @@ function loadTerminalHistory() {
   }
 }
 
+/** Load yellow timing from localStorage */
+function loadYellowTiming() {
+  const saved = localStorage.getItem('indicatorYellowTiming');
+  if (saved) {
+    try {
+      state.yellowTiming = JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse yellow timing:', e);
+      state.yellowTiming = { minMs: 5000, maxMs: 15000 };
+    }
+  }
+}
+
 // ============================================
 // CLOCK
 // ============================================
@@ -178,7 +192,9 @@ function toggleBlueHalf(side) {
 function scheduleYellowToggle() {
   if (yellowTimer) clearTimeout(yellowTimer);
 
-  const interval = Math.random() * 10000 + 5000;
+  // Use persisted timing or defaults
+  const { minMs = 5000, maxMs = 15000 } = state.yellowTiming || {};
+  const interval = Math.random() * (maxMs - minMs) + minMs;
 
   yellowTimer = setTimeout(() => {
     state.yellow = !state.yellow;
@@ -933,6 +949,7 @@ function init() {
   // Load persisted data
   loadLogs();
   loadTerminalHistory();
+  loadYellowTiming();
 
   // Start timers
   startClock();
@@ -958,12 +975,32 @@ if (document.readyState === 'loading') {
   init();
 }
 
-// Export for testing
+// Export for testing and tool adapter
 window.IndicatorLights = {
   getState: () => ({ ...state }),
   toggleBlueLeft: () => toggleBlueHalf('left'),
   toggleBlueRight: () => toggleBlueHalf('right'),
   toggleRed,
+  // NEW: Yellow light control
+  toggleYellow: () => {
+    state.yellow = !state.yellow;
+    yellowLight.classList.toggle('on', state.yellow);
+    yellowLight.setAttribute('aria-label', `Yellow indicator light, currently ${state.yellow ? 'ON' : 'OFF'}, toggles randomly every 5-15 seconds`);
+    updateStatus();
+    appendTerminalLine(`Yellow: ${state.yellow ? 'ON' : 'OFF'}`, 'output');
+  },
+  // NEW: Yellow timing control
+  getYellowTiming: () => ({ minMs: 5000, maxMs: 15000 }),
+  setYellowTiming: (minMs, maxMs) => {
+    if (yellowTimer) clearTimeout(yellowTimer);
+    // Store in state for persistence
+    state.yellowTiming = { minMs, maxMs };
+    localStorage.setItem('indicatorYellowTiming', JSON.stringify({ minMs, maxMs }));
+    scheduleYellowToggle();
+  },
+  // Clock functions
+  formatTime,
+  formatDateTime,
   // Log CRUD
   createLogEntry,
   readLogs,
@@ -973,5 +1010,13 @@ window.IndicatorLights = {
   clearLogs,
   // Terminal
   appendTerminalLine,
-  processCommand
+  processCommand,
+  // NEW: Terminal history access
+  getTerminalHistory: () => [...state.terminalHistory],
+  // NEW: Status update
+  updateStatus,
+  // NEW: Yellow timer access (for direct manipulation if needed)
+  _getYellowTimer: () => yellowTimer,
+  _setYellowTimer: (timer) => { yellowTimer = timer; },
+  _getScheduleYellowToggle: () => scheduleYellowToggle,
 };

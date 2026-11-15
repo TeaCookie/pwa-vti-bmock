@@ -3,12 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Flat LED Indicator Lights PWA with Logging">
+  <meta name="description" content="Flat LED Indicator Lights PWA with Logging and Needle 3 AI">
   <meta name="theme-color" content="#1a1a2e">
   <title>Indicator Lights</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="styles.css">
+
+  <!-- Import map for ES modules (needle-rs from CDN) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "needle-rs": "https://cdn.jsdelivr.net/npm/needle-rs@latest/+esm"
+    }
+  }
+  </script>
 </head>
 <body>
   <div class="container">
@@ -130,7 +139,170 @@
     </dialog>
 
   <script src="app.js"></script>
-  <script>
+
+  <!-- Initialize Tool Adapter, Needle 3, and Bridge -->
+  <script type="module">
+    import { initializeAdapter } from './src/adapter/index.js';
+    import { initializeNeedle } from './src/needle/index.js';
+    import { initializeBridge, processQuery, isReady, getStatus } from './src/needle/bridge.js';
+
+    // Model status indicator
+    const statusIndicator = document.createElement('div');
+    statusIndicator.id = 'modelStatus';
+    statusIndicator.style.cssText = `
+      position: fixed; bottom: 10px; right: 10px; z-index: 1000;
+      padding: 8px 12px; border-radius: 4px; font-size: 12px;
+      background: #333; color: #fff; font-family: monospace;
+      transition: background 0.3s;
+    `;
+    statusIndicator.textContent = 'Needle 3: Initializing...';
+    document.body.appendChild(statusIndicator);
+
+    async function updateStatus() {
+      const status = getStatus();
+      const el = document.getElementById('modelStatus');
+      if (status.initialized && status.agentReady) {
+        el.textContent = 'Needle 3: Ready ✓';
+        el.style.background = '#0a0';
+      } else if (status.initialized) {
+        el.textContent = 'Needle 3: Loading model...';
+        el.style.background = '#aa0';
+      } else {
+        el.textContent = 'Needle 3: Initializing...';
+        el.style.background = '#a00';
+      }
+    }
+
+    async function initNeedle3() {
+      try {
+        // Initialize tool adapter
+        const adapter = await initializeAdapter();
+        console.log('[App] Tool adapter initialized');
+
+        // Initialize Needle 3 engine
+        await initializeNeedle();
+        console.log('[App] Needle 3 initialized');
+
+        // Initialize bridge
+        await initializeBridge(adapter);
+        console.log('[App] Bridge initialized');
+
+        // Update status
+        updateStatus();
+
+        // Expose for manual testing
+        window.Needle3 = {
+          processQuery,
+          isReady,
+          getStatus,
+          adapter,
+        };
+
+        // Add a simple chat interface to terminal for testing
+        addChatInterface();
+
+      } catch (error) {
+        console.error('[App] Needle 3 initialization failed:', error);
+        const el = document.getElementById('modelStatus');
+        el.textContent = 'Needle 3: Error - ' + error.message;
+        el.style.background = '#a00';
+      }
+    }
+
+    function addChatInterface() {
+      // Add a chat toggle button to terminal header
+      const terminalHeader = document.querySelector('.terminal-header');
+      if (terminalHeader) {
+        const chatBtn = document.createElement('button');
+        chatBtn.id = 'chatToggle';
+        chatBtn.className = 'terminal-toggle';
+        chatBtn.setAttribute('aria-label', 'Toggle AI chat');
+        chatBtn.textContent = '💬';
+        terminalHeader.appendChild(chatBtn);
+
+        // Chat panel
+        const chatPanel = document.createElement('div');
+        chatPanel.id = 'chatPanel';
+        chatPanel.style.cssText = `
+          position: absolute; top: 35px; right: 0; width: 350px; max-height: 300px;
+          background: #1a1a2e; border: 1px solid #333; border-radius: 4px;
+          display: none; flex-direction: column; z-index: 100;
+          font-family: monospace; font-size: 12px; color: #e0e0e0;
+        `;
+        chatPanel.innerHTML = `
+          <div style="padding: 8px; border-bottom: 1px solid #333; display: flex; justify-content: space-between;">
+            <span>AI Assistant (Needle 3)</span>
+            <button id="chatClose" style="background:none;border:none;color:#888;cursor:pointer">✕</button>
+          </div>
+          <div id="chatMessages" style="flex:1; overflow-y:auto; padding: 8px; max-height: 200px;"></div>
+          <div style="padding: 8px; border-top: 1px solid #333; display: flex; gap: 4px;">
+            <input id="chatInput" type="text" placeholder="Ask me to control lights, log data, etc." style="flex:1; background:#0d0d1a; border:1px solid #333; color:#fff; padding:4px 8px; border-radius:3px;">
+            <button id="chatSend" style="background:#333; border:none; color:#fff; padding:4px 8px; border-radius:3px; cursor:pointer">Send</button>
+          </div>
+        `;
+        document.querySelector('.terminal').appendChild(chatPanel);
+
+        const chatToggle = document.getElementById('chatToggle');
+        const chatClose = document.getElementById('chatClose');
+        const chatInput = document.getElementById('chatInput');
+        const chatSend = document.getElementById('chatSend');
+        const chatMessages = document.getElementById('chatMessages');
+        // chatPanel already declared above as the created element
+
+        chatToggle.addEventListener('click', () => {
+          const isOpen = chatPanel.style.display === 'flex';
+          chatPanel.style.display = isOpen ? 'none' : 'flex';
+        });
+
+        chatClose.addEventListener('click', () => {
+          chatPanel.style.display = 'none';
+        });
+
+        async function sendChat() {
+          const query = chatInput.value.trim();
+          if (!query) return;
+
+          chatInput.value = '';
+          addMessage('user', query);
+
+          try {
+            const { response, toolCalls, toolResults } = await processQuery(query);
+            addMessage('assistant', response);
+
+            // Show tool calls if any
+            if (toolCalls.length > 0) {
+              const toolInfo = toolCalls.map((tc, i) =>
+                `${tc.name}(${JSON.stringify(tc.arguments)}) → ${toolResults[i]?.result?.error ? 'ERROR' : 'OK'}`
+              ).join('\n');
+              addMessage('system', `Tools: ${toolInfo}`);
+            }
+          } catch (error) {
+            addMessage('error', 'Error: ' + error.message);
+          }
+        }
+
+        function addMessage(role, text) {
+          const div = document.createElement('div');
+          div.style.cssText = `margin: 4px 0; padding: 4px 8px; border-radius: 3px;`;
+          const colors = { user: '#0a0', assistant: '#0aa', system: '#aa0', error: '#a00' };
+          div.style.background = colors[role] + '20';
+          div.style.borderLeft = `3px solid ${colors[role] || '#888'}`;
+          div.textContent = `${role}: ${text}`;
+          chatMessages.appendChild(div);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        chatSend.addEventListener('click', sendChat);
+        chatInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') sendChat();
+        });
+      }
+    }
+
+    // Start initialization
+    initNeedle3();
+
+    // Service Worker registration
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js')
         .then(reg => console.log('SW registered:', reg.scope))
