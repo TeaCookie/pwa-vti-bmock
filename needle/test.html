@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Needle 3 base test</title>
+  <style>
+    body { font: 14px/1.4 system-ui, sans-serif; margin: 16px; max-width: 760px; }
+    h1 { font-size: 18px; margin: 0 0 8px; }
+    .row { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; align-items: center; }
+    input[type=text] { flex: 1; min-width: 200px; padding: 6px; }
+    button { padding: 6px 12px; }
+    pre { background: #f3f4f6; padding: 8px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #d1d5db; padding: 4px 8px; text-align: left; }
+    .fail { color: #b91c1c; }
+    .pass { color: #15803d; }
+    progress { width: 240px; }
+    label { white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <h1>Needle 3 base test (no app wiring)</h1>
+  <div class="row">
+    <button id="load">Load model</button>
+    <progress id="bar" value="0" max="1"></progress>
+    <span id="stage">idle</span>
+  </div>
+  <div class="row">
+    <input type="text" id="text" placeholder="turn on the red light" disabled>
+    <button id="run" disabled>Run once</button>
+  </div>
+  <div class="row">
+    <label><input type="checkbox" id="reset" checked> reset before each request</label>
+    <label>max tokens <input type="number" id="maxTokens" value="384" min="16" max="1024" style="width:70px"></label>
+    <button id="cases" disabled>Run all cases</button>
+  </div>
+  <div>Result</div>
+  <pre id="result">-</pre>
+  <div>Raw engine output</div>
+  <pre id="raw">-</pre>
+  <div id="summary"></div>
+  <script type="module">
+    import { NeedleClient } from './needle-client.js';
+    import './validate.js';
+
+    const $ = (id) => document.getElementById(id);
+    const stageLabels = {
+      runtime: 'runtime', 'model-download': 'model', verify: 'verifying hash', load: 'loading model', tools: 'registering tools'
+    };
+    const needle = new NeedleClient({
+      onProgress: (m) => {
+        $('stage').textContent = stageLabels[m.stage] || m.stage;
+        if (m.total) { $('bar').max = m.total; $('bar').value = m.loaded; }
+      }
+    });
+    const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+    const opts = () => ({ reset: $('reset').checked, maxTokens: Number($('maxTokens').value) || 384 });
+
+    function show(r) {
+      $('result').textContent = JSON.stringify({
+        calls: r.calls, suppressed: r.suppressed, confidence: r.confidence,
+        latencyMs: r.latencyMs, timings: r.timings, warnings: r.warnings
+      }, null, 2);
+      $('raw').textContent = r.raw;
+    }
+    function showError(e) {
+      $('result').textContent = e.code + ': ' + e.message;
+      $('raw').textContent = e.raw || '-';
+    }
+
+    $('load').onclick = async () => {
+      $('load').disabled = true;
+      const t0 = performance.now();
+      try {
+        const ready = await needle.init();
+        $('stage').textContent = 'ready (' + Math.round(performance.now() - t0) + ' ms total, worker ' + ready.loadMs + ' ms)';
+        for (const id of ['text', 'run', 'cases']) $(id).disabled = false;
+      } catch (e) {
+        $('stage').textContent = 'failed';
+        showError(e);
+        $('load').disabled = false;
+      }
+    };
+
+    $('run').onclick = async () => {
+      const text = $('text').value.trim();
+      if (!text) return;
+      try { show(await needle.complete(text, opts())); } catch (e) { showError(e); }
+    };
+    $('text').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('run').click(); });
+
+    $('cases').onclick = async () => {
+      $('cases').disabled = true;
+      const cases = await (await fetch('./cases.json')).json();
+      const groups = {};
+      const failures = [];
+      const times = [];
+      for (const c of cases) {
+        const g = groups[c.group] || (groups[c.group] = { pass: 0, total: 0 });
+        g.total++;
+        let calls = null; let why = '';
+        try {
+          const r = await needle.complete(c.text, opts());
+          calls = r.calls; times.push(r.latencyMs);
+          if (!self.NeedleValidate.scoreCase(c.expected, calls)) why = 'wrong calls';
+        } catch (e) { why = e.code + ': ' + e.message; }
+        if (why) failures.push({ c, why, calls }); else g.pass++;
+        $('stage').textContent = 'cases ' + (failures.length + Object.values(groups).reduce((a, x) => a + x.pass, 0)) + '/' + cases.length;
+      }
+      times.sort((a, b) => a - b);
+      const med = times.length ? times[Math.floor(times.length / 2)] : null;
+      const worst = times.length ? times[times.length - 1] : null;
+      let html = '<table><tr><th>group</th><th>passed</th></tr>';
+      for (const [name, g] of Object.entries(groups)) {
+        html += '<tr><td>' + name + '</td><td class="' + (g.pass === g.total ? 'pass' : 'fail') + '">' + g.pass + ' / ' + g.total + '</td></tr>';
+      }
+      html += '</table><div>latency median ' + med + ' ms, worst ' + worst + ' ms (reset=' + $('reset').checked + ', maxTokens=' + $('maxTokens').value + ')</div>';
+      if (failures.length) {
+        html += '<table><tr><th>text</th><th>expected</th><th>got</th></tr>';
+        for (const f of failures) {
+          html += '<tr><td>' + esc(f.c.text) + '</td><td><code>' + esc(JSON.stringify(f.c.expected)) + '</code></td><td class="fail"><code>' +
+            esc(f.calls ? JSON.stringify(f.calls) : '') + '</code> ' + esc(f.why) + '</td></tr>';
+        }
+        html += '</table>';
+      }
+      $('summary').innerHTML = html;
+      $('cases').disabled = false;
+    };
+  </script>
+</body>
+</html>

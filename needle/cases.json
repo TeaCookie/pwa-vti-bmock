@@ -1,0 +1,440 @@
+[
+  {
+    "group": "toggle-on",
+    "text": "turn on blue left",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "switch on left blue",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off blue left",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off the left blue light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "turn on blue right",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "switch on right blue",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off blue right",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off the right blue light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "turn on yellow",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "switch on the yellow light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off yellow",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off yellow light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "turn on red",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "switch on the red light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off red",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off red light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "status",
+    "text": "what is the status of the lights",
+    "expected": [
+      {
+        "name": "get_light_status",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "status",
+    "text": "which lights are on",
+    "expected": [
+      {
+        "name": "get_light_status",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "status",
+    "text": "check the lights",
+    "expected": [
+      {
+        "name": "get_light_status",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "time",
+    "text": "what time is it",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "time",
+    "text": "what does the clock say",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "time",
+    "text": "tell me the time",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "speech",
+    "text": "um turn the yellow light off please",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "speech",
+    "text": "can you turn on the red light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "speech",
+    "text": "hey switch off blue left",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "speech",
+    "text": "Turn On Blue Right.",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn on red and turn off yellow",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      },
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn on blue left then turn on blue right",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": true
+        }
+      },
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn off the red light and tell me the time",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": false
+        }
+      },
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "none",
+    "text": "what is the weather today",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "tell me a joke",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "delete all the logs",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "hello",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "set the yellow timing to ten seconds",
+    "expected": []
+  },
+  {
+    "group": "independence",
+    "text": "turn on red",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "independence",
+    "text": "what time is it",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "independence",
+    "text": "turn off yellow",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  }
+]
