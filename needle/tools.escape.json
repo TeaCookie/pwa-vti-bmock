@@ -1,0 +1,57 @@
+[
+  {
+    "name": "get_light_status",
+    "description": "Get whether each indicator light is currently on or off.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "get_clock_time",
+    "description": "Get the current time shown on the clock.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "toggle_light",
+    "description": "Turn one indicator light on or off.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "light": {
+          "type": "string",
+          "enum": [
+            "blue-left",
+            "blue-right",
+            "yellow",
+            "red"
+          ],
+          "description": "Which light to change."
+        },
+        "state": {
+          "type": "boolean",
+          "description": "true to turn the light on, false to turn it off."
+        }
+      },
+      "required": [
+        "light",
+        "state"
+      ]
+    }
+  },
+  {
+    "name": "no_action",
+    "description": "Use this for greetings, small talk, and any request that none of the other tools can do.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "noop": true
+  }
+]

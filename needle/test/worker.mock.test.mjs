@@ -233,3 +233,21 @@ test('a download whose bytes do not match the pinned hash fails with hash-mismat
   assert.equal(err.code, 'hash-mismatch');
   assert.equal(w.store.has(w.manifest.model.url), false, 'unverified bytes are never cached');
 });
+
+test('the local noop marker is never sent to the engine, but still drives validation', async () => {
+  const escapeTools = JSON.parse(readFileSync(new URL('tools.escape.json', dir), 'utf8'));
+  const w = makeWorld({ outputs: [out([call('no_action', {})], { confidence: 0.7 })] });
+  w.post({ ...initMsg, tools: escapeTools });
+  await w.waitFor((m) => m.type === 'ready');
+
+  const init = w.log.calls.find((c) => c[0] === 'cactus_init');
+  const sent = JSON.parse(init[3][1]);
+  assert.equal(sent.length, escapeTools.length);
+  assert.equal(sent.some((t) => 'noop' in t), false, 'noop must be stripped before cactus_init');
+  assert.ok(sent.some((t) => t.name === 'no_action'), 'the escape-hatch tool itself is registered');
+
+  w.post({ type: 'complete', id: 1, text: 'hello' });
+  const res = await w.waitFor((m) => m.type === 'result' && m.id === 1);
+  assert.deepEqual(plain(res.calls), []);
+  assert.equal(res.noAction, true);
+});

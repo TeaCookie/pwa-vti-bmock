@@ -82,7 +82,11 @@
 
     const byName = new Map(tools.map(function (t) { return [t.name, t]; }));
     const calls = [];
+    let noAction = false;
     for (const c of rawCalls) {
+      // A tool marked "noop" is an escape hatch: choosing it means "no tool fits" and is not an action.
+      const named = c && typeof c.name === 'string' ? byName.get(c.name) : null;
+      if (named && named.noop) { noAction = true; continue; }
       const result = validateCall(c, byName);
       if (typeof result === 'string') {
         return { ok: false, code: 'invalid-output', message: result };
@@ -93,6 +97,7 @@
     return {
       ok: true,
       calls: calls,
+      noAction: noAction,
       suppressed: Array.isArray(parsed.suppressed_calls) ? parsed.suppressed_calls : [],
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : null,
       timings: {

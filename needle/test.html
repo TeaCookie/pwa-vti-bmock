@@ -21,6 +21,7 @@
 </head>
 <body>
   <h1>Needle 3 base test (no app wiring)</h1>
+  <div>tools: <code id="toolsfile"></code></div>
   <div class="row">
     <button id="load">Load model</button>
     <progress id="bar" value="0" max="1"></progress>
@@ -49,7 +50,13 @@
     const stageLabels = {
       runtime: 'runtime', 'model-download': 'model', verify: 'verifying hash', load: 'loading model', tools: 'registering tools'
     };
+    // ?tools=tools.escape.json (or tools.tight.json / tools.both.json) picks the tool set; default tools.json
+    const requested = new URLSearchParams(location.search).get('tools') || 'tools.json';
+    const toolsFile = /^tools[\w.-]*\.json$/.test(requested) ? requested : 'tools.json';
+    document.title = 'Needle 3 base test (' + toolsFile + ')';
+    document.getElementById('toolsfile').textContent = toolsFile;
     const needle = new NeedleClient({
+      toolsUrl: new URL(toolsFile, location.href).href,
       onProgress: (m) => {
         $('stage').textContent = stageLabels[m.stage] || m.stage;
         if (m.total) { $('bar').max = m.total; $('bar').value = m.loaded; }
@@ -125,7 +132,7 @@
       for (const [name, g] of Object.entries(groups)) {
         html += '<tr><td>' + esc(name) + '</td><td class="' + (g.pass === g.total ? 'pass' : 'fail') + '">' + g.pass + ' / ' + g.total + '</td></tr>';
       }
-      html += '</table><div>latency median ' + med + ' ms, worst ' + worst + ' ms (reset=' + $('reset').checked + ', maxTokens=' + $('maxTokens').value + ')</div>';
+      html += '</table><div>latency median ' + med + ' ms, worst ' + worst + ' ms (tools=' + toolsFile + ', reset=' + $('reset').checked + ', maxTokens=' + $('maxTokens').value + ')</div>';
 
       // Sweep: how does a response-level confidence threshold trade "no tool fits" against real commands?
       const haveConfidence = results.some((r) => r.confidence !== null);

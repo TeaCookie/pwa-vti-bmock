@@ -77,6 +77,21 @@ expects, the page shows the raw text so `validate.js` can be adjusted in one pla
 
 56 cases is still a small set. Add cases for every new failure before changing anything else.
 
+## Tool-set experiments (A/B in the same page)
+
+`test.html?tools=<file>` picks the tool set; the file name is shown at the top and in the results line.
+Change one thing per run and compare the group table and the threshold sweep.
+
+| File | What differs from `tools.json` |
+| --- | --- |
+| `tools.json` | Baseline |
+| `tools.tight.json` | Descriptions say "Only for ..." for each tool (wording only) |
+| `tools.escape.json` | Adds an escape-hatch tool `no_action`, marked `"noop": true` |
+| `tools.both.json` | Both of the above |
+
+A tool marked `"noop": true` is an escape hatch: if the model calls it, the result is an empty `calls` array
+(`noAction: true`), i.e. "no tool fits". The `noop` marker is stripped before the tools are sent to the engine.
+
 ## If it is slow or wrong
 
 1. Look at `prefill_tps` and `decode_tps` in the result. Low prefill means the prompt is long; low decode with a

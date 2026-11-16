@@ -86,3 +86,34 @@ test('scoreCase is exact on names, arguments and order', () => {
   assert.equal(scoreCase([], []), true);
   assert.equal(scoreCase([a], [{ ...a, arguments: { light: 'red', state: false } }]), false);
 });
+
+const escapeTools = JSON.parse(readFileSync(new URL('../tools.escape.json', import.meta.url), 'utf8'));
+
+test('a call to the noop escape-hatch tool means "no tool fits" and is not an action', () => {
+  const r = parseResult(ok({ function_calls: [{ name: 'no_action', arguments: {} }], confidence: 0.8 }), escapeTools);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.calls, []);
+  assert.equal(r.noAction, true);
+});
+
+test('noop calls are dropped from a mixed response but real calls are kept', () => {
+  const r = parseResult(
+    ok({ function_calls: [{ name: 'no_action' }, { name: 'toggle_light', arguments: { light: 'red', state: true } }] }),
+    escapeTools
+  );
+  assert.equal(r.ok, true);
+  assert.equal(r.calls.length, 1);
+  assert.equal(r.noAction, true);
+});
+
+test('all tool-set variants are valid and differ only where intended', () => {
+  for (const f of ['tools.tight.json', 'tools.escape.json', 'tools.both.json']) {
+    const list = JSON.parse(readFileSync(new URL('../' + f, import.meta.url), 'utf8'));
+    for (const t of list) {
+      assert.equal(typeof t.name, 'string');
+      assert.equal(typeof t.description, 'string');
+      assert.equal(t.parameters.type, 'object');
+    }
+    assert.equal(list.filter((t) => t.noop).length, f.includes('escape') || f.includes('both') ? 1 : 0, f);
+  }
+});

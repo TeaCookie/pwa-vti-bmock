@@ -1,0 +1,57 @@
+[
+  {
+    "name": "get_light_status",
+    "description": "Get which indicator lights are on or off. Only for questions about the state of the lights.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "get_clock_time",
+    "description": "Get the current time shown on the clock. Only for questions about the time or the clock.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "toggle_light",
+    "description": "Turn one indicator light on or off. Only for commands to switch a light.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "light": {
+          "type": "string",
+          "enum": [
+            "blue-left",
+            "blue-right",
+            "yellow",
+            "red"
+          ],
+          "description": "Which light to change."
+        },
+        "state": {
+          "type": "boolean",
+          "description": "true to turn the light on, false to turn it off."
+        }
+      },
+      "required": [
+        "light",
+        "state"
+      ]
+    }
+  },
+  {
+    "name": "no_action",
+    "description": "Use this for greetings, small talk, and any request that none of the other tools can do.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "noop": true
+  }
+]

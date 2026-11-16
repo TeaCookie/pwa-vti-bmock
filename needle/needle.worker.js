@@ -172,7 +172,8 @@ async function init(manifestUrl, toolList) {
 
   progress('tools');
   tools = toolList;
-  registerTools(tools);
+  // "noop" is a local marker for validate.js; the engine only gets name/description/parameters.
+  registerTools(tools.map(({ noop, ...forEngine }) => forEngine));
 
   outputPtr = engine._malloc(OUTPUT_CAPACITY);
   if (!outputPtr) throw new NeedleError('out-of-memory', 'could not allocate the output buffer');
@@ -204,7 +205,7 @@ function complete(id, text, opts) {
   }
   send({
     type: 'result', id,
-    calls: parsed.calls, suppressed: parsed.suppressed, confidence: parsed.confidence,
+    calls: parsed.calls, noAction: parsed.noAction, suppressed: parsed.suppressed, confidence: parsed.confidence,
     timings: parsed.timings, warnings: parsed.warnings, raw, latencyMs
   });
 }
