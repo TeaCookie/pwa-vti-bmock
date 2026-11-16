@@ -15,8 +15,10 @@ python3 -m http.server 8000        # or: npx serve .
    Second load should show no network requests for them.
 2. **Run once** sends one request and shows the validated calls, the raw engine JSON, `latencyMs`,
    `prefill_tps` and `decode_tps`.
-3. **Run all cases** scores `cases.json` (37 cases, 8 groups) and prints a table per group, failures,
-   and median/worst latency.
+3. **Run all cases** scores `cases.json` (56 cases, 8 groups) and prints a table per group, a confidence
+   threshold sweep, failures, and median/worst latency. Cases 1-37 are the first baseline set and are unchanged;
+   cases 38-56 were appended later, mostly extra "no tool fits" cases. The `confidence threshold` box re-scores the
+   last run without re-running the model.
 
 Record for every run: device, browser, group scores, median and worst `latencyMs`, `prefill_tps`, `decode_tps`.
 
@@ -73,7 +75,7 @@ expects, the page shows the raw text so `validate.js` can be adjusted in one pla
 | invalid-output errors | 0 unexplained |
 | latency | log median and worst; target a few seconds or less per request on desktop |
 
-37 cases is a starting set. Add cases for every new failure before changing anything else.
+56 cases is still a small set. Add cases for every new failure before changing anything else.
 
 ## If it is slow or wrong
 

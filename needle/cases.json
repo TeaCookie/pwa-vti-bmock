@@ -436,5 +436,168 @@
         }
       }
     ]
+  },
+  {
+    "group": "none",
+    "text": "turn on the green light",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "show me the logs",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "clear the terminal",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "what is the battery level",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "play some music",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "set an alarm for seven",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "what is two plus two",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "turn up the volume",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "open the settings",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "thanks",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "good morning",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "add a log entry for yellow",
+    "expected": []
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off the right blue light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off blue right",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off the left blue light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off right blue",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn on red and tell me the time",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      },
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "what time is it and which lights are on",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      },
+      {
+        "name": "get_light_status",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn off yellow and turn on red",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      },
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
   }
 ]
