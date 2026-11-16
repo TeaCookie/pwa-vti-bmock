@@ -132,7 +132,7 @@
       for (const [name, g] of Object.entries(groups)) {
         html += '<tr><td>' + esc(name) + '</td><td class="' + (g.pass === g.total ? 'pass' : 'fail') + '">' + g.pass + ' / ' + g.total + '</td></tr>';
       }
-      html += '</table><div>latency median ' + med + ' ms, worst ' + worst + ' ms (tools=' + toolsFile + ', reset=' + $('reset').checked + ', maxTokens=' + $('maxTokens').value + ')</div>';
+      html += '</table><div>latency median ' + med + ' ms, worst ' + worst + ' ms (tools=' + toolsFile + ', no_action chosen in ' + results.filter((r) => r.noAction).length + ' cases, reset=' + $('reset').checked + ', maxTokens=' + $('maxTokens').value + ')</div>';
 
       // Sweep: how does a response-level confidence threshold trade "no tool fits" against real commands?
       const haveConfidence = results.some((r) => r.confidence !== null);
@@ -164,10 +164,10 @@
         html += '</table>';
       }
 
-      html += '<details><summary>Every case with confidence</summary><table><tr><th>group</th><th>text</th><th>calls</th><th>conf</th><th>ms</th></tr>';
+      html += '<details><summary>Every case with confidence</summary><table><tr><th>group</th><th>text</th><th>calls</th><th>conf</th><th>ms</th><th>no_action</th></tr>';
       for (const r of results) {
         html += '<tr><td>' + esc(r.c.group) + '</td><td>' + esc(r.c.text) + '</td><td><code>' + esc(r.err || JSON.stringify(r.calls)) + '</code></td><td>' +
-          (r.confidence === null ? '-' : r.confidence.toFixed(3)) + '</td><td>' + (r.latencyMs ?? '-') + '</td></tr>';
+          (r.confidence === null ? '-' : r.confidence.toFixed(3)) + '</td><td>' + (r.latencyMs ?? '-') + '</td><td>' + (r.noAction ? 'yes' : '') + '</td></tr>';
       }
       html += '</table></details>';
       $('summary').innerHTML = html;
@@ -179,10 +179,10 @@
       const cases = await (await fetch('./cases.json')).json();
       results = [];
       for (const c of cases) {
-        const r = { c, calls: null, confidence: null, latencyMs: null, err: '' };
+        const r = { c, calls: null, confidence: null, latencyMs: null, noAction: false, err: '' };
         try {
           const res = await needle.complete(c.text, opts());
-          r.calls = res.calls; r.confidence = res.confidence; r.latencyMs = res.latencyMs;
+          r.calls = res.calls; r.confidence = res.confidence; r.latencyMs = res.latencyMs; r.noAction = !!res.noAction;
         } catch (e) { r.err = e.code + ': ' + e.message; }
         results.push(r);
         $('stage').textContent = 'cases ' + results.length + '/' + cases.length;

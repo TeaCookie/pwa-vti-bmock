@@ -92,6 +92,33 @@ Change one thing per run and compare the group table and the threshold sweep.
 A tool marked `"noop": true` is an escape hatch: if the model calls it, the result is an empty `calls` array
 (`noAction: true`), i.e. "no tool fits". The `noop` marker is stripped before the tools are sent to the engine.
 
+## Results so far (real model, 56 cases, reset on, maxTokens 384)
+
+| Tool set | Commands (39) | No tool fits (17) | Overall | Latency median / worst |
+| --- | --- | --- | --- | --- |
+| `tools.json` | 36 (92%) | 8 (47%) | 44/56 (79%) | 616 / 1243 ms |
+| `tools.tight.json` | 35 (90%) | 8 (47%) | 43/56 (77%) | 671 / 1263 ms |
+| `tools.escape.json` | 36 (92%) | 11 (65%) | 47/56 (84%) | 691 / 1369 ms |
+| **`tools.both.json`** | **37 (95%)** | **12 (71%)** | **49/56 (88%)** | 666 / 1242 ms |
+
+Reading it:
+- The escape-hatch tool is the change that matters (+3 no-tool cases alone). Tighter descriptions alone did nothing
+  (-1 case); the difference between `escape` and `both` is 2 cases, which is within noise at this size.
+- A response-level confidence threshold does not help: with `both`, raising it from 0 to 0.4 trades no-tool accuracy
+  (71% to 88%) for command accuracy (95% to 87%) and overall stays at 88%.
+- Recommended tool set for now: `tools.both.json`. No invalid-output errors in any run.
+
+Failures that appeared in all four runs (so they are not noise, and descriptions did not move them):
+1. "switch off the right blue light" and "switch off right blue" return `blue-left`. The same wording with "turn off",
+   or "switch on right blue", is correct, so it is specific to that phrasing.
+2. "set the yellow timing to ten seconds" and "add a log entry for yellow" return `toggle_light yellow`
+   (confidence 0.23-0.35). These become real tools later, so do not over-tune on them.
+3. Questions about unrelated things (weather, battery, logs) go to a read-only `get_*` tool.
+
+Proposed app policy (from this one 56-case set, so treat the numbers as a first estimate): run read-only calls
+as returned; for `toggle_light` below confidence 0.5, ask "Did you mean ...?" first. On the `both` run all 4 wrong
+toggles were under 0.5, and 7 of 29 correct toggle responses were too.
+
 ## If it is slow or wrong
 
 1. Look at `prefill_tps` and `decode_tps` in the result. Low prefill means the prompt is long; low decode with a
