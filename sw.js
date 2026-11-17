@@ -51,6 +51,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // The Needle test page and worker manage their own caching (see needle/README.md)
+  if (new URL(event.request.url).pathname.startsWith('/needle/')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {

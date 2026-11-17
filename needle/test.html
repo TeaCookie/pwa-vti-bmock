@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Needle 3 base test</title>
+  <style>
+    body { font: 14px/1.4 system-ui, sans-serif; margin: 16px; max-width: 760px; }
+    h1 { font-size: 18px; margin: 0 0 8px; }
+    .row { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; align-items: center; }
+    input[type=text] { flex: 1; min-width: 200px; padding: 6px; }
+    button { padding: 6px 12px; }
+    pre { background: #f3f4f6; padding: 8px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #d1d5db; padding: 4px 8px; text-align: left; }
+    .fail { color: #b91c1c; }
+    .pass { color: #15803d; }
+    progress { width: 240px; }
+    label { white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <h1>Needle 3 base test (no app wiring)</h1>
+  <div>tools: <code id="toolsfile"></code></div>
+  <div class="row">
+    <button id="load">Load model</button>
+    <progress id="bar" value="0" max="1"></progress>
+    <span id="stage">idle</span>
+  </div>
+  <div class="row">
+    <input type="text" id="text" placeholder="turn on the red light" disabled>
+    <button id="run" disabled>Run once</button>
+  </div>
+  <div class="row">
+    <label><input type="checkbox" id="reset" checked> reset before each request</label>
+    <label>max tokens <input type="number" id="maxTokens" value="384" min="16" max="1024" style="width:70px"></label>
+    <label>confidence threshold <input type="number" id="threshold" value="0" min="0" max="1" step="0.05" style="width:70px"></label>
+    <button id="cases" disabled>Run all cases</button>
+  </div>
+  <div>Result</div>
+  <pre id="result">-</pre>
+  <div>Raw engine output</div>
+  <pre id="raw">-</pre>
+  <div id="summary"></div>
+  <script type="module">
+    import { NeedleClient } from './needle-client.js';
+    import './validate.js';
+
+    const $ = (id) => document.getElementById(id);
+    const stageLabels = {
+      runtime: 'runtime', 'model-download': 'model', verify: 'verifying hash', load: 'loading model', tools: 'registering tools'
+    };
+    // ?tools=tools.escape.json (or tools.tight.json / tools.both.json) picks the tool set; default tools.json
+    const requested = new URLSearchParams(location.search).get('tools') || 'tools.json';
+    const toolsFile = /^tools[\w.-]*\.json$/.test(requested) ? requested : 'tools.json';
+    document.title = 'Needle 3 base test (' + toolsFile + ')';
+    document.getElementById('toolsfile').textContent = toolsFile;
+    const needle = new NeedleClient({
+      toolsUrl: new URL(toolsFile, location.href).href,
+      onProgress: (m) => {
+        $('stage').textContent = stageLabels[m.stage] || m.stage;
+        if (m.total) { $('bar').max = m.total; $('bar').value = m.loaded; }
+      }
+    });
+    const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+    const opts = () => ({ reset: $('reset').checked, maxTokens: Number($('maxTokens').value) || 384 });
+
+    function show(r) {
+      $('result').textContent = JSON.stringify({
+        calls: r.calls, suppressed: r.suppressed, confidence: r.confidence,
+        latencyMs: r.latencyMs, timings: r.timings, warnings: r.warnings
+      }, null, 2);
+      $('raw').textContent = r.raw;
+    }
+    function showError(e) {
+      $('result').textContent = e.code + ': ' + e.message;
+      $('raw').textContent = e.raw || '-';
+    }
+
+    $('load').onclick = async () => {
+      $('load').disabled = true;
+      const t0 = performance.now();
+      try {
+        const ready = await needle.init();
+        $('stage').textContent = 'ready (' + Math.round(performance.now() - t0) + ' ms total, worker ' + ready.loadMs + ' ms)';
+        for (const id of ['text', 'run', 'cases']) $(id).disabled = false;
+      } catch (e) {
+        $('stage').textContent = 'failed';
+        showError(e);
+        $('load').disabled = false;
+      }
+    };
+
+    $('run').onclick = async () => {
+      const text = $('text').value.trim();
+      if (!text) return;
+      try { show(await needle.complete(text, opts())); } catch (e) { showError(e); }
+    };
+    $('text').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('run').click(); });
+
+    let results = [];
+
+    // Response-level confidence gate, applied after the fact so a threshold can be tried without re-running.
+    function gated(r, threshold) {
+      if (r.err) return null;
+      if (threshold > 0 && r.confidence !== null && r.confidence < threshold) return [];
+      return r.calls;
+    }
+    function score(threshold) {
+      const groups = {};
+      const failures = [];
+      for (const r of results) {
+        const g = groups[r.c.group] || (groups[r.c.group] = { pass: 0, total: 0 });
+        g.total++;
+        const calls = gated(r, threshold);
+        if (calls && self.NeedleValidate.scoreCase(r.c.expected, calls)) g.pass++;
+        else failures.push({ r, calls });
+      }
+      return { groups, failures };
+    }
+    const pct = (a, b) => (b ? Math.round((100 * a) / b) + '%' : '-');
+
+    function render() {
+      if (!results.length) return;
+      const threshold = Number($('threshold').value) || 0;
+      const { groups, failures } = score(threshold);
+      const times = results.filter((r) => !r.err).map((r) => r.latencyMs).sort((a, b) => a - b);
+      const med = times.length ? times[Math.floor(times.length / 2)] : null;
+      const worst = times.length ? times[times.length - 1] : null;
+
+      let html = '<table><tr><th>group</th><th>passed (threshold ' + threshold + ')</th></tr>';
+      for (const [name, g] of Object.entries(groups)) {
+        html += '<tr><td>' + esc(name) + '</td><td class="' + (g.pass === g.total ? 'pass' : 'fail') + '">' + g.pass + ' / ' + g.total + '</td></tr>';
+      }
+      html += '</table><div>latency median ' + med + ' ms, worst ' + worst + ' ms (tools=' + toolsFile + ', no_action chosen in ' + results.filter((r) => r.noAction).length + ' cases, reset=' + $('reset').checked + ', maxTokens=' + $('maxTokens').value + ')</div>';
+
+      // Sweep: how does a response-level confidence threshold trade "no tool fits" against real commands?
+      const haveConfidence = results.some((r) => r.confidence !== null);
+      if (haveConfidence) {
+        html += '<p>Threshold sweep (responses below the threshold count as "no call")</p><table><tr><th>threshold</th><th>no-tool cases</th><th>command cases</th><th>all</th></tr>';
+        for (let t = 0; t <= 0.951; t += 0.05) {
+          let nonePass = 0, noneTotal = 0, cmdPass = 0, cmdTotal = 0;
+          for (const r of results) {
+            const isNone = r.c.expected.length === 0;
+            const calls = gated(r, t);
+            const okCase = calls && self.NeedleValidate.scoreCase(r.c.expected, calls);
+            if (isNone) { noneTotal++; if (okCase) nonePass++; } else { cmdTotal++; if (okCase) cmdPass++; }
+          }
+          html += '<tr><td>' + t.toFixed(2) + '</td><td>' + nonePass + ' / ' + noneTotal + ' (' + pct(nonePass, noneTotal) + ')</td><td>' +
+            cmdPass + ' / ' + cmdTotal + ' (' + pct(cmdPass, cmdTotal) + ')</td><td>' + pct(nonePass + cmdPass, noneTotal + cmdTotal) + '</td></tr>';
+        }
+        html += '</table>';
+      } else {
+        html += '<p class="fail">No numeric top-level "confidence" in the engine output, so no threshold sweep. Check the raw output.</p>';
+      }
+
+      if (failures.length) {
+        html += '<p>Failures at this threshold</p><table><tr><th>text</th><th>expected</th><th>got</th><th>conf</th></tr>';
+        for (const f of failures) {
+          html += '<tr><td>' + esc(f.r.c.text) + '</td><td><code>' + esc(JSON.stringify(f.r.c.expected)) + '</code></td><td class="fail"><code>' +
+            esc(f.calls ? JSON.stringify(f.calls) : '') + '</code> ' + esc(f.r.err || 'wrong calls') + '</td><td>' +
+            (f.r.confidence === null ? '-' : f.r.confidence.toFixed(3)) + '</td></tr>';
+        }
+        html += '</table>';
+      }
+
+      html += '<details><summary>Every case with confidence</summary><table><tr><th>group</th><th>text</th><th>calls</th><th>conf</th><th>ms</th><th>no_action</th></tr>';
+      for (const r of results) {
+        html += '<tr><td>' + esc(r.c.group) + '</td><td>' + esc(r.c.text) + '</td><td><code>' + esc(r.err || JSON.stringify(r.calls)) + '</code></td><td>' +
+          (r.confidence === null ? '-' : r.confidence.toFixed(3)) + '</td><td>' + (r.latencyMs ?? '-') + '</td><td>' + (r.noAction ? 'yes' : '') + '</td></tr>';
+      }
+      html += '</table></details>';
+      $('summary').innerHTML = html;
+    }
+    $('threshold').addEventListener('change', render);
+
+    $('cases').onclick = async () => {
+      $('cases').disabled = true;
+      const cases = await (await fetch('./cases.json')).json();
+      results = [];
+      for (const c of cases) {
+        const r = { c, calls: null, confidence: null, latencyMs: null, noAction: false, err: '' };
+        try {
+          const res = await needle.complete(c.text, opts());
+          r.calls = res.calls; r.confidence = res.confidence; r.latencyMs = res.latencyMs; r.noAction = !!res.noAction;
+        } catch (e) { r.err = e.code + ': ' + e.message; }
+        results.push(r);
+        $('stage').textContent = 'cases ' + results.length + '/' + cases.length;
+      }
+      $('stage').textContent = 'cases done';
+      render();
+      $('cases').disabled = false;
+    };
+  </script>
+</body>
+</html>
