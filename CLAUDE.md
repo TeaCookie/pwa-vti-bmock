@@ -19,13 +19,11 @@ pwa-vti-bmock/
 ├── index.html          # Main HTML with lights, clock, terminal, log table, modal
 ├── styles.css          # Flat LED styling + responsive layout (terminal right on desktop, below on mobile)
 ├── app.js              # Light logic, clock, log CRUD, terminal, modal, localStorage persistence
-├── manifest.json       # PWA manifest (SVG + PNG icons)
+├── manifest.json       # PWA manifest (SVG icon)
 ├── sw.js               # Service Worker for offline caching
 ├── netlify.toml        # Netlify deployment config
 ├── icons/
-│   ├── icon.svg        # Source SVG icon (maskable, any size)
-│   ├── generate-icons.html  # Browser tool to generate PNG icons
-│   └── icon-*.png      # Generated PNG icons (72-512px)
+│   └── icon.svg        # Source SVG icon (maskable, any size)
 └── README.md           # Project documentation
 ```
 
@@ -47,13 +45,6 @@ python -m http.server 8000
 # Drag & drop folder to https://app.netlify.com/drop
 # Or use CLI:
 npx netlify-cli deploy --prod --dir .
-```
-
-### Generate PNG Icons
-```bash
-# Open in browser:
-open icons/generate-icons.html
-# Click "Generate All PNG Icons" → "Download All as ZIP" → extract to icons/
 ```
 
 ## Architecture
@@ -135,7 +126,7 @@ toggle <blue-left|blue-right|yellow|red>
 - Flat LED design using layered `box-shadow` (no gradients)
 
 ### PWA Features
-- **Manifest**: `display: standalone`, SVG + PNG icons, theme colors
+- **Manifest**: `display: standalone`, SVG icon (maskable, any size), theme colors
 - **Service Worker**: Cache-first strategy, offline fallback to index.html
 - **HTTPS required** for SW registration (Netlify provides automatically)
 
@@ -149,7 +140,7 @@ toggle <blue-left|blue-right|yellow|red>
 | Clock format | `app.js` (`formatTime()`) |
 | Log data models | `app.js` (createLogEntry per column) |
 | Terminal commands | `app.js` (`processCommand()`) |
-| PWA metadata | `manifest.json` |
+| PWA metadata | `manifest.json` (SVG icon only) |
 | Caching headers | `netlify.toml` |
 | Offline behavior | `sw.js` |
 

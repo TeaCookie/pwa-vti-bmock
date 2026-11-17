@@ -27,9 +27,7 @@ pwa-vti-bmock/
 ├── sw.js               # Service Worker for offline support
 ├── netlify.toml        # Netlify deployment configuration
 ├── icons/
-│   ├── icon.svg        # Source SVG icon (used in manifest)
-│   ├── generate-icons.html  # Tool to generate PNG icons from SVG
-│   └── icon-*.png      # Generated PNG icons (various sizes)
+│   └── icon.svg        # Source SVG icon (used in manifest, works at any size)
 └── README.md
 ```
 
@@ -53,16 +51,6 @@ pwa-vti-bmock/
 npm install -g netlify-cli
 netlify deploy --prod --dir .
 ```
-
-## Generate PNG Icons (Optional)
-
-The SVG icon in `icons/icon.svg` works in modern browsers. For maximum compatibility:
-
-1. Open `icons/generate-icons.html` in a browser
-2. Click "Generate All PNG Icons"
-3. Click "Download All as ZIP"
-4. Extract the ZIP into the `icons/` folder
-5. Re-deploy
 
 ## Local Development
 
