@@ -176,7 +176,8 @@
 
     $('cases').onclick = async () => {
       $('cases').disabled = true;
-      const cases = await (await fetch('./cases.json')).json();
+      const caseFile = /^cases[\w.-]*\.json$/.test(new URLSearchParams(location.search).get('cases') || '') ? new URLSearchParams(location.search).get('cases') : 'cases.json';
+      const cases = await (await fetch('./' + caseFile)).json();
       results = [];
       for (const c of cases) {
         const r = { c, calls: null, confidence: null, latencyMs: null, noAction: false, err: '' };

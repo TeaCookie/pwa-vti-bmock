@@ -132,3 +132,20 @@ toggles were under 0.5, and 7 of 29 correct toggle responses were too.
 
 Add real tools (logs, timing) one at a time to `tools.json` and `cases.json`, re-running the cases after each.
 Then an adapter from validated calls to `window.IndicatorLights`, and only then UI wiring.
+
+## 16-tool experiment
+
+The 16 tools from the earlier branch, converted to the flat shape (no `additionalProperties`, `minimum`, `pattern` or `const`; ranges and formats are in descriptions instead).
+
+| File | Contents |
+|------|----------|
+| `tools.16.json` | all 16 tools |
+| `tools.16.escape.json` | the 16 plus the `no_action` escape hatch |
+| `cases.16.json` | 80 cases: the 56 baseline cases minus 4 that now match real tools, plus 28 new ones covering 15 of the 16 tools (`import_logs` is a distractor only) |
+
+Run each in the browser, loading the model once per page:
+
+- `needle/test.html?tools=tools.16.json&cases=cases.16.json`
+- `needle/test.html?tools=tools.16.escape.json&cases=cases.16.json`
+
+Compare against the 3-tool numbers by group (toggle, status, time, none, compound) and look at median latency: prefill grows with the tool list.

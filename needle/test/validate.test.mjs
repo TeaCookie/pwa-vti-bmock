@@ -117,3 +117,20 @@ test('all tool-set variants are valid and differ only where intended', () => {
     assert.equal(list.filter((t) => t.noop).length, f.includes('escape') || f.includes('both') ? 1 : 0, f);
   }
 });
+
+test('16-tool sets: every scored case is a valid call against the tool set', () => {
+  const t16 = JSON.parse(readFileSync(new URL('../tools.16.json', import.meta.url), 'utf8'));
+  const t16e = JSON.parse(readFileSync(new URL('../tools.16.escape.json', import.meta.url), 'utf8'));
+  assert.equal(t16.length, 16);
+  assert.equal(t16e.length, 17);
+  assert.equal(new Set(t16.map((t) => t.name)).size, 16, 'names are unique');
+  const cases = JSON.parse(readFileSync(new URL('../cases.16.json', import.meta.url), 'utf8'));
+  for (const c of cases) {
+    const r = parseResult(ok({ function_calls: c.expected }), t16);
+    assert.equal(r.ok, true, c.text + ': ' + (r.message || ''));
+    assert.equal(scoreCase(c.expected, r.calls), true, c.text);
+  }
+  const used = new Set(cases.flatMap((c) => c.expected.map((e) => e.name)));
+  const untested = t16.map((t) => t.name).filter((n) => !used.has(n));
+  assert.deepEqual(untested, ['import_logs'], 'import_logs takes a JSON blob, so it is only a distractor here');
+});
