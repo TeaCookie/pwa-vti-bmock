@@ -134,3 +134,30 @@ test('16-tool sets: every scored case is a valid call against the tool set', () 
   const untested = t16.map((t) => t.name).filter((n) => !used.has(n));
   assert.deepEqual(untested, ['import_logs'], 'import_logs takes a JSON blob, so it is only a distractor here');
 });
+
+test('lean experiment sets: each cases file validates against its own tool set', () => {
+  const load = (f) => JSON.parse(readFileSync(new URL('../' + f, import.meta.url), 'utf8'));
+  const sets = [
+    ['tools.lean.json', 'cases.lean.json', 15],
+    ['tools.logs.json', 'cases.logs.json', 10],
+    ['tools.merged.json', 'cases.merged.json', 11]
+  ];
+  for (const [tf, cf, count] of sets) {
+    const t = load(tf);
+    assert.equal(t.length, count, tf);
+    assert.equal(new Set(t.map((x) => x.name)).size, count, tf + ' names unique');
+    assert.equal(t.some((x) => x.name === 'import_logs'), false, tf + ' has no import_logs');
+    for (const x of t) {
+      assert.equal('confirm' in x.parameters.properties, false, tf + ' ' + x.name + ' hides confirm');
+      assert.equal('dryRun' in x.parameters.properties, false, tf + ' ' + x.name + ' hides dryRun');
+    }
+    for (const c of load(cf)) {
+      const r = parseResult(ok({ function_calls: c.expected }), t);
+      assert.equal(r.ok, true, tf + ' / ' + c.text + ': ' + (r.message || ''));
+      assert.equal(scoreCase(c.expected, r.calls), true, c.text);
+    }
+  }
+  const merged = load('tools.merged.json').map((x) => x.name);
+  assert.ok(merged.includes('create_log_entry') && merged.includes('update_log_entry'));
+  assert.equal(merged.some((n) => /^(create|update)_(blue|yellow|red)_/.test(n)), false);
+});

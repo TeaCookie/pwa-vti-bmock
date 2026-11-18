@@ -118,6 +118,7 @@
       }
       return { groups, failures };
     }
+    const sup = (r) => (r.suppressed && r.suppressed.length ? JSON.stringify(r.suppressed) : '');
     const pct = (a, b) => (b ? Math.round((100 * a) / b) + '%' : '-');
 
     function render() {
@@ -155,19 +156,19 @@
       }
 
       if (failures.length) {
-        html += '<p>Failures at this threshold</p><table><tr><th>text</th><th>expected</th><th>got</th><th>conf</th></tr>';
+        html += '<p>Failures at this threshold</p><table><tr><th>text</th><th>expected</th><th>got</th><th>conf</th><th>suppressed</th></tr>';
         for (const f of failures) {
           html += '<tr><td>' + esc(f.r.c.text) + '</td><td><code>' + esc(JSON.stringify(f.r.c.expected)) + '</code></td><td class="fail"><code>' +
             esc(f.calls ? JSON.stringify(f.calls) : '') + '</code> ' + esc(f.r.err || 'wrong calls') + '</td><td>' +
-            (f.r.confidence === null ? '-' : f.r.confidence.toFixed(3)) + '</td></tr>';
+            (f.r.confidence === null ? '-' : f.r.confidence.toFixed(3)) + '</td><td><code>' + esc(sup(f.r)) + '</code></td></tr>';
         }
         html += '</table>';
       }
 
-      html += '<details><summary>Every case with confidence</summary><table><tr><th>group</th><th>text</th><th>calls</th><th>conf</th><th>ms</th><th>no_action</th></tr>';
+      html += '<details><summary>Every case with confidence</summary><table><tr><th>group</th><th>text</th><th>calls</th><th>conf</th><th>ms</th><th>no_action</th><th>suppressed (below 0.1 floor)</th></tr>';
       for (const r of results) {
         html += '<tr><td>' + esc(r.c.group) + '</td><td>' + esc(r.c.text) + '</td><td><code>' + esc(r.err || JSON.stringify(r.calls)) + '</code></td><td>' +
-          (r.confidence === null ? '-' : r.confidence.toFixed(3)) + '</td><td>' + (r.latencyMs ?? '-') + '</td><td>' + (r.noAction ? 'yes' : '') + '</td></tr>';
+          (r.confidence === null ? '-' : r.confidence.toFixed(3)) + '</td><td>' + (r.latencyMs ?? '-') + '</td><td>' + (r.noAction ? 'yes' : '') + '</td><td><code>' + esc(sup(r)) + '</code></td></tr>';
       }
       html += '</table></details>';
       $('summary').innerHTML = html;
@@ -180,10 +181,10 @@
       const cases = await (await fetch('./' + caseFile)).json();
       results = [];
       for (const c of cases) {
-        const r = { c, calls: null, confidence: null, latencyMs: null, noAction: false, err: '' };
+        const r = { c, suppressed: [], calls: null, confidence: null, latencyMs: null, noAction: false, err: '' };
         try {
           const res = await needle.complete(c.text, opts());
-          r.calls = res.calls; r.confidence = res.confidence; r.latencyMs = res.latencyMs; r.noAction = !!res.noAction;
+          r.calls = res.calls; r.confidence = res.confidence; r.latencyMs = res.latencyMs; r.noAction = !!res.noAction; r.suppressed = res.suppressed || [];
         } catch (e) { r.err = e.code + ': ' + e.message; }
         results.push(r);
         $('stage').textContent = 'cases ' + results.length + '/' + cases.length;

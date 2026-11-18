@@ -149,3 +149,22 @@ Run each in the browser, loading the model once per page:
 - `needle/test.html?tools=tools.16.escape.json&cases=cases.16.json`
 
 Compare against the 3-tool numbers by group (toggle, status, time, none, compound) and look at median latency: prefill grows with the tool list.
+
+## Lean / logs-only / merged experiments
+
+Follow-up to the 16-tool run (61% overall, median ~1.1 s; log tools mostly failed). These sets separate "too many tools" from "bad schemas".
+
+| Tools file | Cases file | What it is |
+|------------|------------|------------|
+| `tools.lean.json` (15) | `cases.lean.json` (80) | the 16 minus `import_logs`; `confirm` and `dryRun` hidden from the model (the app must supply confirmation itself); `clear_logs` expects `{column}` only |
+| `tools.logs.json` (10) | `cases.logs.json` (25) | log tools only, no light tools; 19 log cases plus 6 prompts that should return nothing |
+| `tools.merged.json` (11) | `cases.merged.json` (80) | lean with the six create/update tools merged into `create_log_entry` and `update_log_entry`, each taking a `column` |
+
+URL form: `needle/test.html?tools=<tools file>&cases=<cases file>`.
+
+How to read the results:
+- logs-only good, lean bad: crowding. Route to a small tool subset per request.
+- logs-only bad too: the schemas or descriptions are the problem, not the tool count.
+- merged better than lean: fewer look-alike tools helps; merged worse: the model struggles to fill column-specific arguments.
+
+The test page now shows `suppressed_calls` (calls under the 0.1 confidence floor) in the failures and details tables, so an empty result can be told apart from a correct call that was suppressed.
