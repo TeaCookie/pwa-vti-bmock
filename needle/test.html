@@ -44,7 +44,7 @@
   <div id="summary"></div>
   <script type="module">
     import { NeedleClient } from './needle-client.js';
-    import './validate.js';
+    import './validate.js?v=2'; // version query: a cached older validate.js lacks the lenient scorers
 
     const $ = (id) => document.getElementById(id);
     const stageLabels = {
@@ -110,6 +110,7 @@
       const groups = {};
       const failures = [];
       const V = self.NeedleValidate;
+      if (!V || !V.scoreCaseLenient || !V.scoreNames) throw new Error('validate.js is out of date (cached?). Hard-refresh the page (Ctrl+Shift+R).');
       for (const r of results) {
         const g = groups[r.c.group] || (groups[r.c.group] = { pass: 0, lenient: 0, names: 0, total: 0 });
         g.total++;
@@ -183,7 +184,7 @@
       html += '</table></details>';
       $('summary').innerHTML = html;
     }
-    $('threshold').addEventListener('change', render);
+    $('threshold').addEventListener('change', () => { try { render(); } catch (e) { $('summary').innerHTML = '<p class="fail">Could not render results: ' + esc(e.message) + '</p>'; } });
 
     $('cases').onclick = async () => {
       $('cases').disabled = true;
@@ -200,7 +201,7 @@
         $('stage').textContent = 'cases ' + results.length + '/' + cases.length;
       }
       $('stage').textContent = 'cases done';
-      render();
+      try { render(); } catch (e) { $('summary').innerHTML = '<p class="fail">Could not render results: ' + esc(e.message) + '</p>'; }
       $('cases').disabled = false;
     };
   </script>
