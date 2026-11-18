@@ -5,6 +5,7 @@
  * parseResult(raw, tools)  -> { ok:true, calls, suppressed, confidence, timings, warnings }
  *                           | { ok:false, code, message }
  * scoreCase(expected, calls) -> boolean (exact match on names + arguments, in order)
+ * scoreCaseLenient / scoreNames -> boolean (extra arguments allowed / names only)
  */
 (function (root) {
   'use strict';
@@ -123,7 +124,26 @@
     return true;
   }
 
-  const api = { parseResult: parseResult, scoreCase: scoreCase };
+  /** Same tools in the same order, ignoring arguments. */
+  function scoreNames(expected, calls) {
+    if (!Array.isArray(expected) || !Array.isArray(calls)) return false;
+    if (expected.length !== calls.length) return false;
+    for (let i = 0; i < expected.length; i++) if (expected[i].name !== calls[i].name) return false;
+    return true;
+  }
+
+  /** Right tools, and every expected argument present with the expected value; extra optional arguments are allowed. */
+  function scoreCaseLenient(expected, calls) {
+    if (!scoreNames(expected, calls)) return false;
+    for (let i = 0; i < expected.length; i++) {
+      const a = expected[i].arguments || {};
+      const b = calls[i].arguments || {};
+      for (const k of Object.keys(a)) if (!(k in b) || a[k] !== b[k]) return false;
+    }
+    return true;
+  }
+
+  const api = { parseResult: parseResult, scoreCase: scoreCase, scoreCaseLenient: scoreCaseLenient, scoreNames: scoreNames };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.NeedleValidate = api;
 })(typeof self !== 'undefined' ? self : globalThis);

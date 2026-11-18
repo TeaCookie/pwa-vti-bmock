@@ -1,0 +1,257 @@
+[
+  {
+    "name": "get_light_status",
+    "description": "Get whether each indicator light is currently on or off.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "get_clock_time",
+    "description": "Get the current time shown on the clock.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "read_logs",
+    "description": "Show, list or view the saved log entries of one log column, or of all columns. These are the manual logs, not the terminal.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red",
+            "all"
+          ],
+          "description": "Which log column, or all of them."
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "get_terminal_history",
+    "description": "Show the history of commands typed in the terminal. Not the log entries.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "toggle_light",
+    "description": "Turn one indicator light on or off.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "light": {
+          "type": "string",
+          "enum": [
+            "blue-left",
+            "blue-right",
+            "yellow",
+            "red"
+          ],
+          "description": "Which light to change."
+        },
+        "state": {
+          "type": "boolean",
+          "description": "true to turn the light on, false to turn it off."
+        }
+      },
+      "required": [
+        "light",
+        "state"
+      ]
+    }
+  },
+  {
+    "name": "set_yellow_timing",
+    "description": "Set the range of the yellow light's automatic random toggle interval, in milliseconds.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "minMs": {
+          "type": "integer",
+          "description": "Minimum interval in milliseconds, at least 1000."
+        },
+        "maxMs": {
+          "type": "integer",
+          "description": "Maximum interval in milliseconds, at most 60000."
+        }
+      },
+      "required": [
+        "minMs",
+        "maxMs"
+      ]
+    }
+  },
+  {
+    "name": "create_log_entry",
+    "description": "Add a NEW entry to the blue, yellow or red log column.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red"
+          ],
+          "description": "Which log column: blue, yellow or red."
+        },
+        "time": {
+          "type": "string",
+          "description": "Time of the new entry, 24-hour HH:MM. Omit for the current time."
+        },
+        "left": {
+          "type": "boolean",
+          "description": "Blue column only: left half on (true) or off (false)."
+        },
+        "right": {
+          "type": "boolean",
+          "description": "Blue column only: right half on (true) or off (false)."
+        },
+        "on": {
+          "type": "boolean",
+          "description": "Yellow column only: light on (true) or off (false)."
+        },
+        "transition": {
+          "type": "string",
+          "enum": [
+            "on-to-off",
+            "off-to-on"
+          ],
+          "description": "Red column only: state transition."
+        }
+      },
+      "required": [
+        "column"
+      ]
+    }
+  },
+  {
+    "name": "update_log_entry",
+    "description": "Change an EXISTING log entry. The entry is found by the time it was logged.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red"
+          ],
+          "description": "Which log column: blue, yellow or red."
+        },
+        "time": {
+          "type": "string",
+          "description": "The time of the existing entry to change, 24-hour HH:MM."
+        },
+        "newTime": {
+          "type": "string",
+          "description": "A new time for the entry, 24-hour HH:MM. Only when the time itself changes."
+        },
+        "left": {
+          "type": "boolean",
+          "description": "Blue column only: left half on (true) or off (false)."
+        },
+        "right": {
+          "type": "boolean",
+          "description": "Blue column only: right half on (true) or off (false)."
+        },
+        "on": {
+          "type": "boolean",
+          "description": "Yellow column only: light on (true) or off (false)."
+        },
+        "transition": {
+          "type": "string",
+          "enum": [
+            "on-to-off",
+            "off-to-on"
+          ],
+          "description": "Red column only: state transition."
+        }
+      },
+      "required": [
+        "column",
+        "time"
+      ]
+    }
+  },
+  {
+    "name": "delete_log_entry",
+    "description": "Delete one log entry. The entry is found by the time it was logged.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red"
+          ],
+          "description": "Which log column: blue, yellow or red."
+        },
+        "time": {
+          "type": "string",
+          "description": "The time of the entry to delete, 24-hour HH:MM."
+        }
+      },
+      "required": [
+        "column",
+        "time"
+      ]
+    }
+  },
+  {
+    "name": "clear_logs",
+    "description": "Delete ALL log entries in one column. Destructive.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red"
+          ],
+          "description": "Which log column to clear."
+        }
+      },
+      "required": [
+        "column"
+      ]
+    }
+  },
+  {
+    "name": "export_logs",
+    "description": "Export all log data as JSON or CSV.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "json",
+            "csv"
+          ],
+          "description": "Export format."
+        }
+      },
+      "required": []
+    }
+  }
+]

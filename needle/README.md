@@ -168,3 +168,21 @@ How to read the results:
 - merged better than lean: fewer look-alike tools helps; merged worse: the model struggles to fill column-specific arguments.
 
 The test page now shows `suppressed_calls` (calls under the 0.1 confidence floor) in the failures and details tables, so an empty result can be told apart from a correct call that was suppressed.
+
+## v2 experiment: entries found by time, rewritten descriptions
+
+Results so far (strict / lenient / tool names only, 80 cases): 16 tools 61/64/66%, lean 62/65/66%, merged 68/74/76%; log tools alone (25 cases) 44/48/48%. Fewer tool *count* did not fix the log tools; near-identical tools and unclear descriptions did the damage, so v2 changes the tools themselves.
+
+`tools.v2.json` (11 tools) and `cases.v2.json` (85 cases):
+
+- Starts from the merged set. `create_log_entry` and `update_log_entry` take a `column` plus column-specific fields.
+- Entries are found by **time**, never by ID: `update_log_entry{column, time, newTime?, ...fields}` and `delete_log_entry{column, time}`. `time` is the existing entry's time; `newTime` is the replacement. The app resolves the real entry.
+- Descriptions separate the confusable pairs: create says "NEW", update says "EXISTING", `read_logs` says "show, list or view the manual logs, not the terminal", `get_terminal_history` says "commands typed in the terminal, not the log entries".
+- Optional paging and filter arguments (`limit`, `offset`, `filterType`, `includeMetadata`) are gone from what the model sees; the app applies defaults.
+- `confirm` and `dryRun` are not visible to the model; the app must confirm `clear_logs` and `delete_log_entry` itself.
+
+URL: `needle/test.html?tools=tools.v2.json&cases=cases.v2.json`
+
+The test page now reports three scores per group and in total: strict (exact arguments), lenient (expected arguments present, extra optional arguments allowed) and tool names only. Compare strict-vs-lenient to see argument noise, and lenient-vs-names to see missing or wrong expected values.
+
+What to look at: update-log and create-log (did the model stop sending `id: "<column>"` and start using `time` and `newTime`?), read-logs vs terminal-history (the "show me the logs" confusion), whether `clear_logs` is still returned for read prompts, and the `none` group.

@@ -109,11 +109,16 @@
     function score(threshold) {
       const groups = {};
       const failures = [];
+      const V = self.NeedleValidate;
       for (const r of results) {
-        const g = groups[r.c.group] || (groups[r.c.group] = { pass: 0, total: 0 });
+        const g = groups[r.c.group] || (groups[r.c.group] = { pass: 0, lenient: 0, names: 0, total: 0 });
         g.total++;
         const calls = gated(r, threshold);
-        if (calls && self.NeedleValidate.scoreCase(r.c.expected, calls)) g.pass++;
+        if (calls) {
+          if (V.scoreCaseLenient(r.c.expected, calls)) g.lenient++;
+          if (V.scoreNames(r.c.expected, calls)) g.names++;
+        }
+        if (calls && V.scoreCase(r.c.expected, calls)) g.pass++;
         else failures.push({ r, calls });
       }
       return { groups, failures };
@@ -129,10 +134,15 @@
       const med = times.length ? times[Math.floor(times.length / 2)] : null;
       const worst = times.length ? times[times.length - 1] : null;
 
-      let html = '<table><tr><th>group</th><th>passed (threshold ' + threshold + ')</th></tr>';
+      let html = '<table><tr><th>group</th><th>strict (threshold ' + threshold + ')</th><th>lenient (extra args ok)</th><th>tool names only</th></tr>';
+      const tot = { pass: 0, lenient: 0, names: 0, total: 0 };
       for (const [name, g] of Object.entries(groups)) {
-        html += '<tr><td>' + esc(name) + '</td><td class="' + (g.pass === g.total ? 'pass' : 'fail') + '">' + g.pass + ' / ' + g.total + '</td></tr>';
+        for (const k of Object.keys(tot)) tot[k] += g[k];
+        html += '<tr><td>' + esc(name) + '</td><td class="' + (g.pass === g.total ? 'pass' : 'fail') + '">' + g.pass + ' / ' + g.total + '</td><td>' +
+          g.lenient + ' / ' + g.total + '</td><td>' + g.names + ' / ' + g.total + '</td></tr>';
       }
+      html += '<tr><td><b>all</b></td><td><b>' + tot.pass + ' / ' + tot.total + ' (' + pct(tot.pass, tot.total) + ')</b></td><td><b>' + tot.lenient + ' / ' + tot.total +
+        ' (' + pct(tot.lenient, tot.total) + ')</b></td><td><b>' + tot.names + ' / ' + tot.total + ' (' + pct(tot.names, tot.total) + ')</b></td></tr>';
       html += '</table><div>latency median ' + med + ' ms, worst ' + worst + ' ms (tools=' + toolsFile + ', no_action chosen in ' + results.filter((r) => r.noAction).length + ' cases, reset=' + $('reset').checked + ', maxTokens=' + $('maxTokens').value + ')</div>';
 
       // Sweep: how does a response-level confidence threshold trade "no tool fits" against real commands?

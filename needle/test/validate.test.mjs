@@ -161,3 +161,44 @@ test('lean experiment sets: each cases file validates against its own tool set',
   assert.ok(merged.includes('create_log_entry') && merged.includes('update_log_entry'));
   assert.equal(merged.some((n) => /^(create|update)_(blue|yellow|red)_/.test(n)), false);
 });
+
+const { scoreCaseLenient, scoreNames } = require('../validate.js');
+
+test('lenient scoring allows extra optional arguments, strict does not; names ignores arguments', () => {
+  const exp = [{ name: 'get_terminal_history', arguments: {} }];
+  const got = [{ name: 'get_terminal_history', arguments: { offset: 0, filterType: 'all' } }];
+  assert.equal(scoreCase(exp, got), false);
+  assert.equal(scoreCaseLenient(exp, got), true);
+  const e2 = [{ name: 'update_log_entry', arguments: { column: 'blue', time: '14:30', left: true } }];
+  assert.equal(scoreCaseLenient(e2, [{ name: 'update_log_entry', arguments: { column: 'blue', time: '14:30', left: true, on: true } }]), true);
+  assert.equal(scoreCaseLenient(e2, [{ name: 'update_log_entry', arguments: { column: 'blue', time: '14:30' } }]), false, 'a missing expected argument fails');
+  assert.equal(scoreCaseLenient(e2, [{ name: 'update_log_entry', arguments: { column: 'red', time: '14:30', left: true } }]), false, 'a wrong value fails');
+  assert.equal(scoreNames(e2, [{ name: 'update_log_entry', arguments: {} }]), true);
+  assert.equal(scoreNames(e2, [{ name: 'create_log_entry', arguments: {} }]), false);
+});
+
+test('v2 tool set: 11 tools, entries found by time, no ids or optional paging arguments, cases validate', () => {
+  const load = (f) => JSON.parse(readFileSync(new URL('../' + f, import.meta.url), 'utf8'));
+  const t = load('tools.v2.json');
+  assert.equal(t.length, 11);
+  const byName = Object.fromEntries(t.map((x) => [x.name, x]));
+  for (const n of ['update_log_entry', 'delete_log_entry']) {
+    assert.equal('id' in byName[n].parameters.properties, false, n + ' has no id');
+    assert.ok(byName[n].parameters.required.includes('time'), n + ' requires time');
+  }
+  assert.ok('newTime' in byName.update_log_entry.parameters.properties);
+  assert.deepEqual(Object.keys(byName.read_logs.parameters.properties), ['column']);
+  assert.deepEqual(Object.keys(byName.get_terminal_history.parameters.properties), []);
+  assert.deepEqual(Object.keys(byName.export_logs.parameters.properties), ['format']);
+  for (const x of t) for (const bad of ['limit', 'offset', 'filterType', 'includeMetadata', 'confirm', 'dryRun']) {
+    assert.equal(bad in x.parameters.properties, false, x.name + ' hides ' + bad);
+  }
+  const cases = load('cases.v2.json');
+  for (const c of cases) {
+    const r = parseResult(ok({ function_calls: c.expected }), t);
+    assert.equal(r.ok, true, c.text + ': ' + (r.message || ''));
+    assert.equal(scoreCase(c.expected, r.calls), true, c.text);
+  }
+  const nonRepeat = cases.filter((c) => c.group !== 'independence');
+  assert.equal(new Set(nonRepeat.map((c) => c.text)).size, nonRepeat.length, 'case texts are unique (independence cases repeat on purpose)');
+});
