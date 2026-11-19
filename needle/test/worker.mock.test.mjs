@@ -275,3 +275,24 @@ test('local-only markers (noop, localPattern) never reach the engine, and time a
   assert.equal(bad.code, 'invalid-output');
   assert.match(bad.message, /wrong format/);
 });
+
+test('v4: localAllowed is stripped before the engine and a column/entry_state mismatch is rejected', async () => {
+  const v4 = JSON.parse(readFileSync(new URL('tools.v4.json', dir), 'utf8'));
+  const w = makeWorld({ outputs: [
+    out([call('set_log_entry', { column: 'blue', entry_state: 'both' })]),
+    out([call('set_log_entry', { column: 'yellow', entry_state: 'left' })])
+  ] });
+  w.post({ ...initMsg, tools: v4 });
+  await w.waitFor((m) => m.type === 'ready');
+  const sentRaw = w.log.calls.find((c) => c[0] === 'cactus_init')[3][1];
+  assert.equal(/localAllowed|localPattern|noop/.test(sentRaw), false, 'no local-only keys reach the engine');
+  assert.ok(sentRaw.includes('entry_state') && sentRaw.includes('"enum"'));
+
+  w.post({ type: 'complete', id: 1, text: 'add a blue log with both halves on' });
+  const good = await w.waitFor((m) => m.type === 'result' && m.id === 1);
+  assert.equal(good.calls[0].arguments.entry_state, 'both');
+  w.post({ type: 'complete', id: 2, text: 'log yellow left' });
+  const bad = await w.waitFor((m) => m.type === 'error' && m.id === 2);
+  assert.equal(bad.code, 'invalid-output');
+  assert.match(bad.message, /not valid for column/);
+});

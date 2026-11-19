@@ -170,7 +170,7 @@
         html += '<p>Failures at this threshold</p><table><tr><th>text</th><th>expected</th><th>got</th><th>conf</th><th>suppressed</th></tr>';
         for (const f of failures) {
           html += '<tr><td>' + esc(f.r.c.text) + '</td><td><code>' + esc(JSON.stringify(f.r.c.expected)) + '</code></td><td class="fail"><code>' +
-            esc(f.calls ? JSON.stringify(f.calls) : '') + '</code> ' + esc(f.r.err || 'wrong calls') + '</td><td>' +
+            esc(f.calls ? JSON.stringify(f.calls) : '') + '</code> ' + esc(f.r.err || 'wrong calls') + (f.r.errRaw ? '<br>raw: <code>' + esc(f.r.errRaw) + '</code>' : '') + '</td><td>' +
             (f.r.confidence === null ? '-' : f.r.confidence.toFixed(3)) + '</td><td><code>' + esc(sup(f.r)) + '</code></td></tr>';
         }
         html += '</table>';
@@ -192,11 +192,11 @@
       const cases = await (await fetch('./' + caseFile)).json();
       results = [];
       for (const c of cases) {
-        const r = { c, suppressed: [], calls: null, confidence: null, latencyMs: null, noAction: false, err: '' };
+        const r = { c, errRaw: '', suppressed: [], calls: null, confidence: null, latencyMs: null, noAction: false, err: '' };
         try {
           const res = await needle.complete(c.text, opts());
           r.calls = res.calls; r.confidence = res.confidence; r.latencyMs = res.latencyMs; r.noAction = !!res.noAction; r.suppressed = res.suppressed || [];
-        } catch (e) { r.err = e.code + ': ' + e.message; }
+        } catch (e) { r.err = e.code + ': ' + e.message; r.errRaw = e.raw ? String(e.raw).slice(0, 400) : ''; }
         results.push(r);
         $('stage').textContent = 'cases ' + results.length + '/' + cases.length;
       }

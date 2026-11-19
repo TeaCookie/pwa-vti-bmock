@@ -143,7 +143,7 @@ function loadModel(modelBytes) {
 
 /** What the engine is allowed to see: no local-only markers ("noop" on a tool, "localPattern" on a property). */
 function forEngine(tool) {
-  const { noop, ...rest } = tool;
+  const { noop, localAllowed, ...rest } = tool;
   const copy = JSON.parse(JSON.stringify(rest));
   const props = (copy.parameters && copy.parameters.properties) || {};
   for (const key of Object.keys(props)) delete props[key].localPattern;

@@ -207,3 +207,25 @@ URLs:
 - `needle/test.html?tools=tools.v3.json&cases=cases.holdout.v3.json`
 
 Also worth one run: max tokens 160 instead of 384 on the first URL, to see whether the "token budget exhausted" runaways fail faster without costing valid calls.
+
+## v4 experiment: one `entry_state` value instead of four fields
+
+v3 hold-out result (38 cases, tools.v3.json): 22 strict (58%), 23 on tool names (61%). The upsert fixed the create/update confusion: `set_log_entry` was the model's answer in 4 of 5 log-entry prompts (2 of them suppressed under the 0.1 floor). But arguments were the bottleneck (1/5 strict): the model fills `left`, `right`, `on` and `transition` regardless of column (`left:false, right:false, on:true, transition:"off-to-on"` for a red entry), and gets values wrong ("both halves off" -> `left:true`). Prompts phrased "log ..." came back at confidence 0.02-0.09, below the floor.
+
+`tools.v4.json` (10 tools) replaces those four fields with one closed value, mirroring the terminal vocabulary in CLAUDE.md:
+
+`set_log_entry{column, entry_state, time?}` where `entry_state` is one of
+- blue: `left`, `right`, `both`, `none` (which halves are on)
+- yellow: `on`, `off`
+- red: `on-to-off`, `off-to-on`
+
+The name is `entry_state`, not `state`, so it cannot be confused with `toggle_light`'s boolean `state`. The tool carries a local-only `localAllowed` rule that `validate.js` uses to reject combinations like yellow + `left`; the worker strips it (with `localPattern` and `noop`) before `cactus_init`.
+
+Cases: `cases.v4.json` (85) is `cases.v3.json` with the log-entry cases mapped to `entry_state` (one prompt reworded: "so the left half is on" became "to left only", since the old wording did not say what the right half should be). `cases.holdout.v4.json` (38) is the hold-out set with its 5 log-entry cases mapped the same way.
+
+The test page now also shows the raw engine output for errored cases (for example the "token budget exhausted" runaways) in the failures table.
+
+URLs, to run in this order:
+- `needle/test.html?tools=tools.v3.json&cases=cases.v3.json` (still needed: the v3 main run, to compare with v2 on the same 85 cases)
+- `needle/test.html?tools=tools.v4.json&cases=cases.v4.json`
+- `needle/test.html?tools=tools.v4.json&cases=cases.holdout.v4.json`

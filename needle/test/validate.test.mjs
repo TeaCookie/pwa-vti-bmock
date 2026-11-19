@@ -240,3 +240,33 @@ test('v3 tool set: 10 tools, one set_log_entry instead of create/update, cases a
   const overlap = load('cases.holdout.v3.json').map((c) => c.text).filter((x) => v3.includes(x));
   assert.deepEqual(overlap, [], 'hold-out prompts must not appear in cases.v3.json');
 });
+
+test('v4: entry_state must be valid for the column (localAllowed), and v4 cases validate', () => {
+  const load = (f) => JSON.parse(readFileSync(new URL('../' + f, import.meta.url), 'utf8'));
+  const t = load('tools.v4.json');
+  assert.equal(t.length, 10);
+  const s = t.find((x) => x.name === 'set_log_entry');
+  assert.deepEqual(Object.keys(s.parameters.properties), ['column', 'entry_state', 'time']);
+  assert.deepEqual(s.parameters.required, ['column', 'entry_state']);
+  const call = (args) => parseResult(ok({ function_calls: [{ name: 'set_log_entry', arguments: args }] }), t);
+  assert.equal(call({ column: 'blue', entry_state: 'both' }).ok, true);
+  assert.equal(call({ column: 'yellow', entry_state: 'off', time: '09:15' }).ok, true);
+  assert.equal(call({ column: 'red', entry_state: 'on-to-off' }).ok, true);
+  for (const [column, entry_state] of [['yellow', 'left'], ['red', 'on'], ['blue', 'off'], ['blue', 'off-to-on']]) {
+    const r = call({ column, entry_state });
+    assert.equal(r.ok, false, column + '/' + entry_state);
+    assert.match(r.message, /is not valid for column/);
+  }
+  assert.equal(call({ column: 'yellow', entry_state: 'on', time: 'off' }).ok, false, 'time format still checked');
+  // toggle_light keeps its own boolean "state"; the log tool must not reuse that name
+  assert.equal('state' in s.parameters.properties, false);
+  for (const f of ['cases.v4.json', 'cases.holdout.v4.json']) {
+    for (const c of load(f)) {
+      const r = parseResult(ok({ function_calls: c.expected }), t);
+      assert.equal(r.ok, true, f + ' / ' + c.text + ': ' + (r.message || ''));
+      assert.equal(scoreCase(c.expected, r.calls), true, c.text);
+    }
+  }
+  const v4 = load('cases.v4.json').map((c) => c.text);
+  assert.deepEqual(load('cases.holdout.v4.json').map((c) => c.text).filter((x) => v4.includes(x)), []);
+});

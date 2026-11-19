@@ -58,6 +58,14 @@
         return call.name + ': argument "' + key + '" has the wrong format (' + JSON.stringify(args[key]) + ')';
       }
     }
+    // "localAllowed" (tool-level, local only): which values of one argument are valid for each value of another.
+    const rule = tool.localAllowed;
+    if (rule && rule.arg in args && rule.by in args) {
+      const allowed = rule.values[args[rule.by]];
+      if (allowed && !allowed.includes(args[rule.arg])) {
+        return call.name + ': "' + rule.arg + '" ' + JSON.stringify(args[rule.arg]) + ' is not valid for ' + rule.by + ' ' + JSON.stringify(args[rule.by]);
+      }
+    }
     return { name: call.name, arguments: args };
   }
 
