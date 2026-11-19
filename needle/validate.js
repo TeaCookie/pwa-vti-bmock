@@ -49,6 +49,14 @@
       if (schema.enum && !schema.enum.includes(args[key])) {
         return call.name + ': argument "' + key + '" must be one of ' + schema.enum.join(', ');
       }
+      // A string argument is never meaningfully empty.
+      if (schema.type === 'string' && args[key].trim() === '') {
+        return call.name + ': argument "' + key + '" is empty';
+      }
+      // "localPattern" is checked here only. The worker strips it before the tools go to the engine.
+      if (schema.localPattern && !new RegExp(schema.localPattern).test(args[key])) {
+        return call.name + ': argument "' + key + '" has the wrong format (' + JSON.stringify(args[key]) + ')';
+      }
     }
     return { name: call.name, arguments: args };
   }

@@ -202,3 +202,41 @@ test('v2 tool set: 11 tools, entries found by time, no ids or optional paging ar
   const nonRepeat = cases.filter((c) => c.group !== 'independence');
   assert.equal(new Set(nonRepeat.map((c) => c.text)).size, nonRepeat.length, 'case texts are unique (independence cases repeat on purpose)');
 });
+
+test('time-format and empty-string checks run in the validator (localPattern)', () => {
+  const t = JSON.parse(readFileSync(new URL('../tools.v3.json', import.meta.url), 'utf8'));
+  const call = (args) => parseResult(ok({ function_calls: [{ name: 'set_log_entry', arguments: args }] }), t);
+  assert.equal(call({ column: 'yellow', time: '09:15', on: true }).ok, true);
+  assert.equal(call({ column: 'yellow', on: true }).ok, true, 'time is optional');
+  for (const bad of ['off', '9:15', '24:00', '12:60', '']) {
+    const r = call({ column: 'yellow', time: bad, on: true });
+    assert.equal(r.ok, false, JSON.stringify(bad));
+    assert.equal(r.code, 'invalid-output');
+  }
+  const d = parseResult(ok({ function_calls: [{ name: 'delete_log_entry', arguments: { column: 'red', time: '' } }] }), t);
+  assert.equal(d.ok, false);
+  assert.match(d.message, /empty/);
+});
+
+test('v3 tool set: 10 tools, one set_log_entry instead of create/update, cases and hold-out validate', () => {
+  const load = (f) => JSON.parse(readFileSync(new URL('../' + f, import.meta.url), 'utf8'));
+  const t = load('tools.v3.json');
+  assert.equal(t.length, 10);
+  const names = t.map((x) => x.name);
+  assert.ok(names.includes('set_log_entry') && names.includes('delete_log_entry'));
+  assert.equal(names.some((n) => /^(create|update)_/.test(n)), false);
+  const by = Object.fromEntries(t.map((x) => [x.name, x]));
+  assert.equal('newTime' in by.set_log_entry.parameters.properties, false);
+  assert.deepEqual(by.set_log_entry.parameters.required, ['column']);
+  assert.equal(by.read_logs.parameters.properties.column.enum.includes('all'), false, 'omit column for all');
+  for (const f of ['cases.v3.json', 'cases.holdout.v3.json']) {
+    for (const c of load(f)) {
+      const r = parseResult(ok({ function_calls: c.expected }), t);
+      assert.equal(r.ok, true, f + ' / ' + c.text + ': ' + (r.message || ''));
+      assert.equal(scoreCase(c.expected, r.calls), true, c.text);
+    }
+  }
+  const v3 = load('cases.v3.json').map((c) => c.text);
+  const overlap = load('cases.holdout.v3.json').map((c) => c.text).filter((x) => v3.includes(x));
+  assert.deepEqual(overlap, [], 'hold-out prompts must not appear in cases.v3.json');
+});

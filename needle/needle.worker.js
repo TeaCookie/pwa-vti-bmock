@@ -141,6 +141,15 @@ function loadModel(modelBytes) {
   if (code < 0) throw new NeedleError('model-load', 'cactus_load returned ' + code);
 }
 
+/** What the engine is allowed to see: no local-only markers ("noop" on a tool, "localPattern" on a property). */
+function forEngine(tool) {
+  const { noop, ...rest } = tool;
+  const copy = JSON.parse(JSON.stringify(rest));
+  const props = (copy.parameters && copy.parameters.properties) || {};
+  for (const key of Object.keys(props)) delete props[key].localPattern;
+  return copy;
+}
+
 function registerTools(toolList) {
   const code = engine.ccall(
     'cactus_init', 'number',
@@ -172,8 +181,8 @@ async function init(manifestUrl, toolList) {
 
   progress('tools');
   tools = toolList;
-  // "noop" is a local marker for validate.js; the engine only gets name/description/parameters.
-  registerTools(tools.map(({ noop, ...forEngine }) => forEngine));
+  // "noop" and "localPattern" are local markers for validate.js; the engine only gets the plain schema.
+  registerTools(tools.map(forEngine));
 
   outputPtr = engine._malloc(OUTPUT_CAPACITY);
   if (!outputPtr) throw new NeedleError('out-of-memory', 'could not allocate the output buffer');

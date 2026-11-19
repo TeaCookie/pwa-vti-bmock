@@ -186,3 +186,24 @@ URL: `needle/test.html?tools=tools.v2.json&cases=cases.v2.json`
 The test page now reports three scores per group and in total: strict (exact arguments), lenient (expected arguments present, extra optional arguments allowed) and tool names only. Compare strict-vs-lenient to see argument noise, and lenient-vs-names to see missing or wrong expected values.
 
 What to look at: update-log and create-log (did the model stop sending `id: "<column>"` and start using `time` and `newTime`?), read-logs vs terminal-history (the "show me the logs" confusion), whether `clear_logs` is still returned for read prompts, and the `none` group.
+
+## v3 experiment: one `set_log_entry`, time and format checks, hold-out set
+
+v2 result (85 cases): 67% strict, 71% tool names. Entries found by time worked (delete 3/3, update chose the right tool 5/5), but `create_log_entry` was never chosen (the model took `update_log_entry` even for "add a NEW entry"), `newTime` collected the new state ("off"), and no-tool prompts fell to 5/15 because the model became more decisive everywhere. At a confidence floor of 0.20-0.25 the no-tool group recovered to 9-10/15 with little command loss, tuned on the same cases.
+
+`tools.v3.json` (10 tools):
+- **`set_log_entry{column, time?, left?, right?, on?, transition?}`** replaces create and update. The app decides whether an entry at that time exists and creates or changes it. There is no `newTime`; moving an entry to another time is not a model tool.
+- `delete_log_entry{column, time}` as in v2. `read_logs` no longer has an `all` value: omit `column` for all columns.
+- `time` carries a **`localPattern`** (HH:MM). It is checked by `validate.js` only and stripped by the worker before `cactus_init`, so the engine sees the same plain schema as before. The validator also rejects empty strings. Values like `time: "off"` or `time: ""` now fail as `invalid-output`.
+
+Case files:
+- `cases.v3.json` (85): the v2 cases mapped onto `set_log_entry`; the two "move entry to new time" cases replaced by two update-by-time cases.
+- `cases.holdout.v3.json` (38): new prompts and phrasings, 15 of them no-tool, none shared with `cases.v3.json` (a test enforces this).
+
+How to use the hold-out: run `cases.v3.json`, look at the threshold sweep and pick a floor. Then run `cases.holdout.v3.json` with the same tools and look at the same floor in its sweep. If the gain holds on prompts the floor was not chosen on, it is real.
+
+URLs:
+- `needle/test.html?tools=tools.v3.json&cases=cases.v3.json`
+- `needle/test.html?tools=tools.v3.json&cases=cases.holdout.v3.json`
+
+Also worth one run: max tokens 160 instead of 384 on the first URL, to see whether the "token budget exhausted" runaways fail faster without costing valid calls.
