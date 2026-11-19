@@ -270,3 +270,19 @@ test('v4: entry_state must be valid for the column (localAllowed), and v4 cases 
   const v4 = load('cases.v4.json').map((c) => c.text);
   assert.deepEqual(load('cases.holdout.v4.json').map((c) => c.text).filter((x) => v4.includes(x)), []);
 });
+
+test('v5: 9 tools without set_yellow_timing, no timing cases, validation is exposed', () => {
+  const load = (f) => JSON.parse(readFileSync(new URL('../' + f, import.meta.url), 'utf8'));
+  const t = load('tools.v5.json');
+  assert.equal(t.length, 9);
+  assert.ok(!t.some((x) => (x.function || x).name === 'set_yellow_timing'));
+  for (const f of ['cases.v5.json', 'cases.holdout.v5.json']) {
+    for (const c of load(f)) assert.ok(!c.expected.some((e) => e.name === 'set_yellow_timing'), c.text);
+    for (const c of load(f)) assert.ok(c.expected.every((e) => t.some((x) => (x.function || x).name === e.name)), c.text);
+  }
+  const raw = JSON.stringify({ success: true, function_calls: [{ name: 'get_clock_time', arguments: {} }], confidence: 0.9,
+    validation: { ungrounded: ['set_log_entry.time'], negation: false } });
+  const r = parseResult(raw, t);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.validation.ungrounded, ['set_log_entry.time']);
+});

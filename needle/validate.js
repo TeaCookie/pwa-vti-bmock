@@ -116,6 +116,7 @@
       calls: calls,
       noAction: noAction,
       suppressed: Array.isArray(parsed.suppressed_calls) ? parsed.suppressed_calls : [],
+      validation: parsed.validation && typeof parsed.validation === 'object' ? parsed.validation : null,
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : null,
       timings: {
         prefill_tps: parsed.prefill_tps != null ? parsed.prefill_tps : null,

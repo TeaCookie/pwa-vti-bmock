@@ -214,7 +214,7 @@ function complete(id, text, opts) {
   }
   send({
     type: 'result', id,
-    calls: parsed.calls, noAction: parsed.noAction, suppressed: parsed.suppressed, confidence: parsed.confidence,
+    calls: parsed.calls, noAction: parsed.noAction, suppressed: parsed.suppressed, validation: parsed.validation, confidence: parsed.confidence,
     timings: parsed.timings, warnings: parsed.warnings, raw, latencyMs
   });
 }
