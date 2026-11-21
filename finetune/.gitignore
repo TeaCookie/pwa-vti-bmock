@@ -1,0 +1,7 @@
+# deterministic from build_data.mjs; regenerate instead of committing
+data/seed.jsonl
+# the base checkpoint auto-downloads from Hugging Face
+checkpoints/needle3.safetensors
+__pycache__/
+.venv/
+data/augmented.jsonl
