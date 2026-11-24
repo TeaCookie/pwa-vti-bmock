@@ -4,27 +4,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**pwa-vti-bmock** - A vanilla HTML/CSS/JS Progressive Web App featuring three realistic flat LED indicator lights with digital clock, manual logging system, and command terminal. No build step required - deploys directly to Netlify.
+**pwa-vti-bmock** has two parts:
+
+1. **The app**: a vanilla HTML/CSS/JS Progressive Web App with three flat LED indicator lights, a digital clock, a manual logging system and a command terminal. No build step; it deploys directly to Netlify.
+2. **An ongoing experiment** (`needle/`, `finetune/`): getting a small on-device tool-calling model (Cactus Needle 3, in a Web Worker) to turn plain-language requests into calls on the app's tools. **The model is not wired into the app** and nothing in `app.js` or `index.html` references it.
 
 ## Current State
 
-- **Repository**: Complete PWA with vanilla HTML, CSS, JS
-- **Branch**: `main` (clean)
-- **No package.json, no build system, no test framework** - pure vanilla JS
+- **App**: complete and stable. Changes here are normal feature or bug work.
+- **Model experiment**: in progress. Experiment 1 (fine-tuned 20-layer model) cleared the accuracy, off-topic and latency gates but missed the size gate (63 MB vs 30 MB), and its hold-out score may be inflated because the hold-out is not sealed. Experiment 2 (retrain at 10 epochs, depth ladder, sealed hold-out) is planned. Numbers and caveats are in `README.md` and `finetune/README.md`.
+- **Treat the fine-tuned model as a research result, not a shipped feature.** Do not describe it as production-ready in docs, commits or PRs, and do not wire it into the app, until experiment 2 has reported.
+- **No build system and no `package.json`.** There is a Node test suite (see Commands) but no test framework dependency.
 
 ## Project Structure
 
 ```
 pwa-vti-bmock/
-├── index.html          # Main HTML with lights, clock, terminal, log table, modal
-├── styles.css          # Flat LED styling + responsive layout (terminal right on desktop, below on mobile)
-├── app.js              # Light logic, clock, log CRUD, terminal, modal, localStorage persistence
-├── manifest.json       # PWA manifest (SVG icon)
-├── sw.js               # Service Worker for offline caching
-├── netlify.toml        # Netlify deployment config
-├── icons/
-│   └── icon.svg        # Source SVG icon (maskable, any size)
-└── README.md           # Project documentation
+├── index.html, styles.css, app.js   # The app: lights, clock, log CRUD, terminal, modal, localStorage
+├── manifest.json, sw.js             # PWA manifest and Service Worker (sw.js ignores /needle/)
+├── netlify.toml                     # Netlify deployment config
+├── icons/icon.svg                   # Source SVG icon (maskable, any size)
+├── needle/                          # Model test harness (not part of the shipped app)
+│   ├── tools.*.json                 # Tool sets under test (v5 is current: 9 tools)
+│   ├── cases.*.json                 # Scored prompt sets (dev, hold-out, per tool set)
+│   ├── needle.worker.js             # Web Worker: Cactus runtime, model, cactus_complete, validation
+│   ├── needle-client.js             # init()/complete() promise API for the page
+│   ├── validate.js                  # Output parsing and scoring (shared by worker, page, tests)
+│   ├── guard.js                     # App-side domain gate and per-column field cleanup (not used when scoring raw output)
+│   ├── test.html                    # Test page; takes ?tools=, ?cases=, ?manifest=
+│   ├── assets*.json                 # Pinned runtime/model manifests (assets.exp1_20l.json = fine-tuned model)
+│   └── test/*.test.mjs              # Node tests
+├── finetune/                        # Fine-tuning pipeline: data, scripts, training logs, results (see its README)
+├── docs/                            # Earlier design notes (tool discovery, model selection, tool interface design)
+└── README.md
 ```
 
 ## Commands
@@ -34,11 +46,17 @@ pwa-vti-bmock/
 # Netlify CLI (recommended - provides HTTPS for SW)
 npx netlify-cli dev
 
-# Or simple HTTP server (SW won't register without HTTPS)
+# Or simple HTTP server (SW won't register without HTTPS; localhost is fine for the model test page)
 npx serve .
 # or
-python -m http.server 8000
+python3 -m http.server 8000
 ```
+
+### Tests
+```bash
+node --test needle/test/*.test.mjs
+```
+Pass the files with the glob. On Node 22, passing the directory (`needle/test`) is treated as a module path and fails with `MODULE_NOT_FOUND`. These tests use a fake Cactus runtime: they check validation, the guard, data checks and the worker call sequence, not the real model's accuracy. Accuracy is measured in the browser at `/needle/test.html`.
 
 ### Deploy to Netlify
 ```bash
@@ -127,8 +145,27 @@ toggle <blue-left|blue-right|yellow|red>
 
 ### PWA Features
 - **Manifest**: `display: standalone`, SVG icon (maskable, any size), theme colors
-- **Service Worker**: Cache-first strategy, offline fallback to index.html
+- **Service Worker**: Cache-first strategy, offline fallback to index.html; requests under `/needle/` bypass it so stale worker files are never served
 - **HTTPS required** for SW registration (Netlify provides automatically)
+
+## Model Experiment (needle/, finetune/)
+
+### What is being built
+A model that maps a request to one of nine v5 tools, or to no call at all when the request is off-topic: `get_light_status`, `get_clock_time`, `read_logs`, `get_terminal_history`, `toggle_light`, `set_log_entry`, `delete_log_entry`, `clear_logs`, `export_logs`. In `set_log_entry`, one closed `entry_state` value replaces the separate `left`/`right`/`on`/`transition` fields (blue: `left|right|both|none`, yellow: `on|off`, red: `on-to-off|off-to-on`), mirroring the terminal vocabulary above.
+
+### Working rules
+- **Judge the raw model output**: no guard, no confidence threshold. The guard in `needle/guard.js` is a later layer, not part of the score.
+- **Change one thing per run** and compare group tables before and after. Add a case for every new failure before changing anything else.
+- **Do not tune on the hold-out.** The current hold-out is not sealed (the same person wrote the training templates and the eval prompts; 39 of 120 v5 eval prompts overlap training at Jaccard 0.8 or higher). A 100% hold-out score is weak evidence. Prefer the dev score and the off-topic false-call count, and use a sealed set of prompts written without looking at the templates for any claim about generalization.
+- **Eval prompts must never reach training.** `finetune/build_data.mjs check` drops training rows that match an eval prompt, using the hardcoded `names` list in `loadEvalPrompts()` in `finetune/lib.mjs`. Any new eval file (such as the sealed hold-out) must be added to that list before the next training run.
+- **Do not claim more than the data shows.** State the size gate miss (63 MB vs 30 MB) and the contamination caveat whenever quoting experiment 1 numbers.
+- **Never edit `needle/validate.js` scoring to make a result look better.** If real engine output differs from what the parser expects, fix the parser in that one file and say so.
+
+### Experiment 1 result (summary)
+Fine-tuned 20-layer model vs untuned base, raw output: dev strict 80/83 (96%) vs 58/83 (70%); hold-out strict 37/37 (100%, possibly inflated) vs 25/37 (68%); wrong calls on 15 off-topic prompts 0 vs 9 (dev) and 6 (hold-out); median latency 804 ms vs 849 ms; size 63 MB vs 35 MB. Gates: accuracy at least 90%, no off-topic false calls, no truncation errors, latency under 1.2 s, size at most 30 MB (missed). Three dev misses, all prompts absent from training: "what does the clock say", "show the terminal history", "turn on red and turn off yellow". Training: validation loss bottomed at epoch 8 and rose by epoch 20, so mild overfitting. Full detail: `finetune/README.md`.
+
+### Next (experiment 2)
+Retrain at `--epochs 10`, build with `cactus build --layers N` at several depths (for example 20, 14, 10, 8), score each on dev and hold-out, and add a sealed hold-out of 20 to 30 prompts written by the user. Details and commands: `finetune/README.md`.
 
 ## Key Files to Modify
 
@@ -143,18 +180,24 @@ toggle <blue-left|blue-right|yellow|red>
 | PWA metadata | `manifest.json` (SVG icon only) |
 | Caching headers | `netlify.toml` |
 | Offline behavior | `sw.js` |
+| Tool definitions under test | `needle/tools.*.json` (and regenerate `finetune/tools.train.json`) |
+| Scored prompts | `needle/cases.*.json` |
+| Training data and templates | `finetune/seed.mjs`, `finetune/build_data.mjs` |
 
 ## Git Workflow
 
-- Main branch: `main`
-- No build step - commit source files directly
-- Co-author attribution for Claude-assisted commits:
+- Main branch: `main`. Experiment work happens on `needle3-*` branches; `needle3-finetune-exp1` stacks on all earlier ones, so merging it brings the whole history.
+- When merging an experiment branch, use a merge commit or fast-forward, **not squash**. Squashing makes the earlier `needle3-*` branches look unmerged and loses per-experiment history.
+- No build step - commit source files directly.
+- **Git LFS** is used for model artifacts (`*.safetensors`, `*.cact`). Run `git lfs install` before committing them. Never commit `node_modules/`.
+- Co-author attribution for Claude-assisted commits: use the name of the model that did the work, for example:
   ```
-  Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+  Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
   ```
 
 ## Testing Checklist
 
+App:
 - [ ] Blue left/right halves toggle independently
 - [ ] Yellow light toggles randomly (5-15s)
 - [ ] Red light toggles on click
@@ -174,3 +217,9 @@ toggle <blue-left|blue-right|yellow|red>
 - [ ] Works offline after first load
 - [ ] Reduced motion disables animations
 - [ ] High contrast mode works
+
+Model experiment:
+- [ ] `node --test needle/test/*.test.mjs` passes
+- [ ] Raw (no guard) dev and hold-out runs saved to `finetune/results/` for every model compared
+- [ ] Size, median latency, off-topic false calls and truncation errors recorded next to accuracy
+- [ ] Any hold-out number quoted with its contamination caveat unless it comes from the sealed set

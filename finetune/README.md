@@ -19,7 +19,72 @@ finetune/
 
 Everything below runs from the project root in the WSL terminal.
 
-## Experiment 1: full depth (20 layers), raw output
+## Experiment 1 results (done)
+
+Experiment 1 worked. The fine-tuned 20-layer model beat the untuned base by a wide margin on both sets, with no
+post-model layers involved. It cleared every quality gate. It missed the size gate (63 MB against 30 MB), and the
+hold-out score may be inflated.
+
+| Raw model output, no guard | Strict, dev (83) | Strict, hold-out (37) | Wrong calls on 15 off-topic prompts | Median latency | Size |
+| --- | --- | --- | --- | --- | --- |
+| Untuned base | 58 (70%) | 25 (68%) | 9 on dev, 6 on hold-out | 849 ms | 35 MB |
+| exp1, 20 layers | 80 (96%) | 37 (100%) | 0 on both | 804 ms | 63 MB |
+
+**Quality gates.** Overall raw strict was 96% on dev and 100% on hold-out, against the 90% gate. There were no wrong
+calls on off-topic or read prompts, and no truncation errors (the base had one, on "list the red logs").
+
+**Size gate.** At 63 MB the model is about double the 30 MB target. That is the next experiment. Median latency of
+804 ms is under the 1.2 s gate.
+
+**Dev failures.** Three misses in 83 cases, all on prompts that do not appear in the training data:
+- "what does the clock say" returned no call.
+- "show the terminal history" returned `get_clock_time`.
+- "turn on red and turn off yellow" set yellow to true instead of false.
+
+These look like gaps in template coverage rather than a problem with the approach. Adding template variants for these
+shapes is the likely fix, but it should be done after the sealed hold-out exists, so the fix is not tuned on the
+prompts that exposed it.
+
+**Contamination.** The training templates and the eval prompts were written by the same person. The hold-out is not
+sealed, and 39 of the 120 v5 eval prompts overlap with training at Jaccard 0.8 or higher. A perfect hold-out score is
+therefore weaker evidence than it looks. The dev score and the zero false calls on off-topic prompts are more
+convincing, because the base's failures there were so consistent.
+
+**Training run** (`results/exp1_train.log`). Validation loss bottomed out at epoch 8 (0.0835) and drifted up to 0.0998
+by epoch 20 while training loss went to about 0. That is mild overfitting. Accuracy on the held-out 10% of the
+training file was 184/196 exact. Epochs 8 to 10 would likely give the same result in about a third of the time,
+roughly 1.2 hours instead of 3+. The reasoning strings also look correct.
+
+## Experiment 2 (planned): smaller model
+
+Question: how many layers can be dropped before accuracy falls under the gates, and does the 30 MB target hold?
+
+1. **Retrain at 10 epochs.** Do this first: a depth ladder is only worth trusting if every depth comes from the same
+   consistent training run. Same command as step 2 below with `--epochs 10` and new output names
+   (`exp2_adapter.safetensors`, `exp2_train.log`).
+2. **Depth ladder.** Build the same adapter at several depths, for example 20, 14, 10 and 8 layers, and make a
+   manifest for each. Rebuilding is cheap; it is only `cactus build`. The exact flag combination below is an
+   assumption: check `cactus build --help` before running it.
+   ```bash
+   for N in 20 14 10 8; do
+     cactus build --lora finetune/checkpoints/exp2_adapter.safetensors --layers $N --out finetune/models/exp2_${N}l.cact
+     node finetune/make_manifest.mjs finetune/models/exp2_${N}l.cact
+   done
+   ```
+3. **Score every depth** on dev and hold-out in `needle/test.html` with `manifest=assets.exp2_<N>l.json`, as in
+   step 4 below. Compare strict accuracy, off-topic false calls, median latency and file size against the gates.
+   It is not known whether shallow slices trained this way keep their accuracy; this ladder is how we find out.
+4. **Sealed hold-out.** Write 20 to 30 prompts yourself, in your own phrasing, without opening the training templates
+   (`seed.mjs`) while you do it. Save them as a new cases file in the same format as `needle/cases.holdout.v5.json`
+   (suggested name `needle/cases.sealed.v5.json`). Before training anything else, add its file name to the `names` list in
+   `loadEvalPrompts()` in `finetune/lib.mjs`, so `build_data.mjs check` drops any training row that matches one of
+   its prompts and they can never reach `train.jsonl`. Run each depth on it once. This gives a
+   clean generalization number and shows whether the 100% hold-out score holds up.
+
+Gates carried over from experiment 1: raw strict at least 90%, no wrong calls on off-topic or read prompts, no
+truncation errors, median latency under 1.2 s, size at most 30 MB.
+
+## Experiment 1 runbook: full depth (20 layers), raw output
 
 Question: how far does training move raw accuracy on the same dev (83) and hold-out (37) prompts?
 Untuned raw baseline (from your saved v5 pages): dev 58/83 strict (70%), hold-out 25/37 (68%).
