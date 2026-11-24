@@ -1,0 +1,343 @@
+[
+  {
+    "name": "get_light_status",
+    "description": "Get whether each indicator light is currently on or off.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "get_clock_time",
+    "description": "Get the current time shown on the clock.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "read_logs",
+    "description": "Show log entries for one log column, or for all columns.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red",
+            "all"
+          ],
+          "description": "Which log column to read."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum number of entries to return per column."
+        },
+        "offset": {
+          "type": "integer",
+          "description": "Number of entries to skip."
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "get_terminal_history",
+    "description": "Show the terminal command history.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "description": "Maximum number of entries to return, up to 100."
+        },
+        "offset": {
+          "type": "integer",
+          "description": "Number of entries to skip."
+        },
+        "filterType": {
+          "type": "string",
+          "enum": [
+            "command",
+            "output",
+            "error",
+            "info",
+            "all"
+          ],
+          "description": "Which kind of entry to show."
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "toggle_light",
+    "description": "Turn one indicator light on or off.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "light": {
+          "type": "string",
+          "enum": [
+            "blue-left",
+            "blue-right",
+            "yellow",
+            "red"
+          ],
+          "description": "Which light to change."
+        },
+        "state": {
+          "type": "boolean",
+          "description": "true to turn the light on, false to turn it off."
+        }
+      },
+      "required": [
+        "light",
+        "state"
+      ]
+    }
+  },
+  {
+    "name": "set_yellow_timing",
+    "description": "Set the range of the yellow light's automatic random toggle interval, in milliseconds.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "minMs": {
+          "type": "integer",
+          "description": "Minimum interval in milliseconds, at least 1000."
+        },
+        "maxMs": {
+          "type": "integer",
+          "description": "Maximum interval in milliseconds, at most 60000."
+        }
+      },
+      "required": [
+        "minMs",
+        "maxMs"
+      ]
+    }
+  },
+  {
+    "name": "create_blue_log_entry",
+    "description": "Create a new log entry in the blue log column: the state of the left and right halves at a time.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "description": "Time in 24-hour HH:MM format. Omit for the current time."
+        },
+        "left": {
+          "type": "boolean",
+          "description": "Left half on (true) or off (false)."
+        },
+        "right": {
+          "type": "boolean",
+          "description": "Right half on (true) or off (false)."
+        }
+      },
+      "required": [
+        "left",
+        "right"
+      ]
+    }
+  },
+  {
+    "name": "create_yellow_log_entry",
+    "description": "Create a new log entry in the yellow log column: on or off at a time.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "description": "Time in 24-hour HH:MM format. Omit for the current time."
+        },
+        "on": {
+          "type": "boolean",
+          "description": "Yellow light on (true) or off (false)."
+        }
+      },
+      "required": [
+        "on"
+      ]
+    }
+  },
+  {
+    "name": "create_red_log_entry",
+    "description": "Create a new log entry in the red log column: a state transition at a time.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "description": "Time in 24-hour HH:MM format. Omit for the current time."
+        },
+        "transition": {
+          "type": "string",
+          "enum": [
+            "on-to-off",
+            "off-to-on"
+          ],
+          "description": "State transition."
+        }
+      },
+      "required": [
+        "transition"
+      ]
+    }
+  },
+  {
+    "name": "update_blue_log_entry",
+    "description": "Change an existing blue log entry by its ID.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The ID of the log entry."
+        },
+        "left": {
+          "type": "boolean",
+          "description": "Left half on or off."
+        },
+        "right": {
+          "type": "boolean",
+          "description": "Right half on or off."
+        },
+        "time": {
+          "type": "string",
+          "description": "Time in 24-hour HH:MM format, for example 14:30."
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "update_yellow_log_entry",
+    "description": "Change an existing yellow log entry by its ID.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The ID of the log entry."
+        },
+        "on": {
+          "type": "boolean",
+          "description": "Yellow light on or off."
+        },
+        "time": {
+          "type": "string",
+          "description": "Time in 24-hour HH:MM format, for example 14:30."
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "update_red_log_entry",
+    "description": "Change an existing red log entry by its ID.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The ID of the log entry."
+        },
+        "transition": {
+          "type": "string",
+          "enum": [
+            "on-to-off",
+            "off-to-on"
+          ],
+          "description": "State transition."
+        },
+        "time": {
+          "type": "string",
+          "description": "Time in 24-hour HH:MM format, for example 14:30."
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "delete_log_entry",
+    "description": "Delete one log entry by its ID.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red"
+          ],
+          "description": "Which log column the entry is in."
+        },
+        "id": {
+          "type": "string",
+          "description": "The ID of the log entry."
+        }
+      },
+      "required": [
+        "column",
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "clear_logs",
+    "description": "Delete ALL log entries in one column. Destructive.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red"
+          ],
+          "description": "Which log column to clear."
+        }
+      },
+      "required": [
+        "column"
+      ]
+    }
+  },
+  {
+    "name": "export_logs",
+    "description": "Export all log data as JSON or CSV.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "json",
+            "csv"
+          ],
+          "description": "Export format."
+        },
+        "includeMetadata": {
+          "type": "boolean",
+          "description": "Include created and updated timestamps."
+        }
+      },
+      "required": []
+    }
+  }
+]

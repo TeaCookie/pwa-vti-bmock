@@ -132,3 +132,100 @@ toggles were under 0.5, and 7 of 29 correct toggle responses were too.
 
 Add real tools (logs, timing) one at a time to `tools.json` and `cases.json`, re-running the cases after each.
 Then an adapter from validated calls to `window.IndicatorLights`, and only then UI wiring.
+
+## 16-tool experiment
+
+The 16 tools from the earlier branch, converted to the flat shape (no `additionalProperties`, `minimum`, `pattern` or `const`; ranges and formats are in descriptions instead).
+
+| File | Contents |
+|------|----------|
+| `tools.16.json` | all 16 tools |
+| `tools.16.escape.json` | the 16 plus the `no_action` escape hatch |
+| `cases.16.json` | 80 cases: the 56 baseline cases minus 4 that now match real tools, plus 28 new ones covering 15 of the 16 tools (`import_logs` is a distractor only) |
+
+Run each in the browser, loading the model once per page:
+
+- `needle/test.html?tools=tools.16.json&cases=cases.16.json`
+- `needle/test.html?tools=tools.16.escape.json&cases=cases.16.json`
+
+Compare against the 3-tool numbers by group (toggle, status, time, none, compound) and look at median latency: prefill grows with the tool list.
+
+## Lean / logs-only / merged experiments
+
+Follow-up to the 16-tool run (61% overall, median ~1.1 s; log tools mostly failed). These sets separate "too many tools" from "bad schemas".
+
+| Tools file | Cases file | What it is |
+|------------|------------|------------|
+| `tools.lean.json` (15) | `cases.lean.json` (80) | the 16 minus `import_logs`; `confirm` and `dryRun` hidden from the model (the app must supply confirmation itself); `clear_logs` expects `{column}` only |
+| `tools.logs.json` (10) | `cases.logs.json` (25) | log tools only, no light tools; 19 log cases plus 6 prompts that should return nothing |
+| `tools.merged.json` (11) | `cases.merged.json` (80) | lean with the six create/update tools merged into `create_log_entry` and `update_log_entry`, each taking a `column` |
+
+URL form: `needle/test.html?tools=<tools file>&cases=<cases file>`.
+
+How to read the results:
+- logs-only good, lean bad: crowding. Route to a small tool subset per request.
+- logs-only bad too: the schemas or descriptions are the problem, not the tool count.
+- merged better than lean: fewer look-alike tools helps; merged worse: the model struggles to fill column-specific arguments.
+
+The test page now shows `suppressed_calls` (calls under the 0.1 confidence floor) in the failures and details tables, so an empty result can be told apart from a correct call that was suppressed.
+
+## v2 experiment: entries found by time, rewritten descriptions
+
+Results so far (strict / lenient / tool names only, 80 cases): 16 tools 61/64/66%, lean 62/65/66%, merged 68/74/76%; log tools alone (25 cases) 44/48/48%. Fewer tool *count* did not fix the log tools; near-identical tools and unclear descriptions did the damage, so v2 changes the tools themselves.
+
+`tools.v2.json` (11 tools) and `cases.v2.json` (85 cases):
+
+- Starts from the merged set. `create_log_entry` and `update_log_entry` take a `column` plus column-specific fields.
+- Entries are found by **time**, never by ID: `update_log_entry{column, time, newTime?, ...fields}` and `delete_log_entry{column, time}`. `time` is the existing entry's time; `newTime` is the replacement. The app resolves the real entry.
+- Descriptions separate the confusable pairs: create says "NEW", update says "EXISTING", `read_logs` says "show, list or view the manual logs, not the terminal", `get_terminal_history` says "commands typed in the terminal, not the log entries".
+- Optional paging and filter arguments (`limit`, `offset`, `filterType`, `includeMetadata`) are gone from what the model sees; the app applies defaults.
+- `confirm` and `dryRun` are not visible to the model; the app must confirm `clear_logs` and `delete_log_entry` itself.
+
+URL: `needle/test.html?tools=tools.v2.json&cases=cases.v2.json`
+
+The test page now reports three scores per group and in total: strict (exact arguments), lenient (expected arguments present, extra optional arguments allowed) and tool names only. Compare strict-vs-lenient to see argument noise, and lenient-vs-names to see missing or wrong expected values.
+
+What to look at: update-log and create-log (did the model stop sending `id: "<column>"` and start using `time` and `newTime`?), read-logs vs terminal-history (the "show me the logs" confusion), whether `clear_logs` is still returned for read prompts, and the `none` group.
+
+## v3 experiment: one `set_log_entry`, time and format checks, hold-out set
+
+v2 result (85 cases): 67% strict, 71% tool names. Entries found by time worked (delete 3/3, update chose the right tool 5/5), but `create_log_entry` was never chosen (the model took `update_log_entry` even for "add a NEW entry"), `newTime` collected the new state ("off"), and no-tool prompts fell to 5/15 because the model became more decisive everywhere. At a confidence floor of 0.20-0.25 the no-tool group recovered to 9-10/15 with little command loss, tuned on the same cases.
+
+`tools.v3.json` (10 tools):
+- **`set_log_entry{column, time?, left?, right?, on?, transition?}`** replaces create and update. The app decides whether an entry at that time exists and creates or changes it. There is no `newTime`; moving an entry to another time is not a model tool.
+- `delete_log_entry{column, time}` as in v2. `read_logs` no longer has an `all` value: omit `column` for all columns.
+- `time` carries a **`localPattern`** (HH:MM). It is checked by `validate.js` only and stripped by the worker before `cactus_init`, so the engine sees the same plain schema as before. The validator also rejects empty strings. Values like `time: "off"` or `time: ""` now fail as `invalid-output`.
+
+Case files:
+- `cases.v3.json` (85): the v2 cases mapped onto `set_log_entry`; the two "move entry to new time" cases replaced by two update-by-time cases.
+- `cases.holdout.v3.json` (38): new prompts and phrasings, 15 of them no-tool, none shared with `cases.v3.json` (a test enforces this).
+
+How to use the hold-out: run `cases.v3.json`, look at the threshold sweep and pick a floor. Then run `cases.holdout.v3.json` with the same tools and look at the same floor in its sweep. If the gain holds on prompts the floor was not chosen on, it is real.
+
+URLs:
+- `needle/test.html?tools=tools.v3.json&cases=cases.v3.json`
+- `needle/test.html?tools=tools.v3.json&cases=cases.holdout.v3.json`
+
+Also worth one run: max tokens 160 instead of 384 on the first URL, to see whether the "token budget exhausted" runaways fail faster without costing valid calls.
+
+## v4 experiment: one `entry_state` value instead of four fields
+
+v3 hold-out result (38 cases, tools.v3.json): 22 strict (58%), 23 on tool names (61%). The upsert fixed the create/update confusion: `set_log_entry` was the model's answer in 4 of 5 log-entry prompts (2 of them suppressed under the 0.1 floor). But arguments were the bottleneck (1/5 strict): the model fills `left`, `right`, `on` and `transition` regardless of column (`left:false, right:false, on:true, transition:"off-to-on"` for a red entry), and gets values wrong ("both halves off" -> `left:true`). Prompts phrased "log ..." came back at confidence 0.02-0.09, below the floor.
+
+`tools.v4.json` (10 tools) replaces those four fields with one closed value, mirroring the terminal vocabulary in CLAUDE.md:
+
+`set_log_entry{column, entry_state, time?}` where `entry_state` is one of
+- blue: `left`, `right`, `both`, `none` (which halves are on)
+- yellow: `on`, `off`
+- red: `on-to-off`, `off-to-on`
+
+The name is `entry_state`, not `state`, so it cannot be confused with `toggle_light`'s boolean `state`. The tool carries a local-only `localAllowed` rule that `validate.js` uses to reject combinations like yellow + `left`; the worker strips it (with `localPattern` and `noop`) before `cactus_init`.
+
+Cases: `cases.v4.json` (85) is `cases.v3.json` with the log-entry cases mapped to `entry_state` (one prompt reworded: "so the left half is on" became "to left only", since the old wording did not say what the right half should be). `cases.holdout.v4.json` (38) is the hold-out set with its 5 log-entry cases mapped the same way.
+
+The test page now also shows the raw engine output for errored cases (for example the "token budget exhausted" runaways) in the failures table.
+
+URLs, to run in this order:
+- `needle/test.html?tools=tools.v3.json&cases=cases.v3.json` (still needed: the v3 main run, to compare with v2 on the same 85 cases)
+- `needle/test.html?tools=tools.v4.json&cases=cases.v4.json`
+- `needle/test.html?tools=tools.v4.json&cases=cases.holdout.v4.json`

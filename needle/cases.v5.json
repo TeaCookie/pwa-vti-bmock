@@ -1,0 +1,974 @@
+[
+  {
+    "group": "toggle-on",
+    "text": "turn on blue left",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "switch on left blue",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off blue left",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off the left blue light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "turn on blue right",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "switch on right blue",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off blue right",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off the right blue light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "turn on yellow",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "switch on the yellow light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off yellow",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off yellow light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "turn on red",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "switch on the red light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off red",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off red light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "status",
+    "text": "what is the status of the lights",
+    "expected": [
+      {
+        "name": "get_light_status",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "status",
+    "text": "which lights are on",
+    "expected": [
+      {
+        "name": "get_light_status",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "status",
+    "text": "check the lights",
+    "expected": [
+      {
+        "name": "get_light_status",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "time",
+    "text": "what time is it",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "time",
+    "text": "what does the clock say",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "time",
+    "text": "tell me the time",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "speech",
+    "text": "um turn the yellow light off please",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "speech",
+    "text": "can you turn on the red light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "speech",
+    "text": "hey switch off blue left",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "speech",
+    "text": "Turn On Blue Right.",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn on red and turn off yellow",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      },
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn on blue left then turn on blue right",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": true
+        }
+      },
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn off the red light and tell me the time",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": false
+        }
+      },
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "none",
+    "text": "what is the weather today",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "tell me a joke",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "hello",
+    "expected": []
+  },
+  {
+    "group": "independence",
+    "text": "turn on red",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "independence",
+    "text": "what time is it",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "independence",
+    "text": "turn off yellow",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "none",
+    "text": "turn on the green light",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "clear the terminal",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "what is the battery level",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "play some music",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "set an alarm for seven",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "what is two plus two",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "turn up the volume",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "open the settings",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "thanks",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "good morning",
+    "expected": []
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off the right blue light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off blue right",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn off the left blue light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "switch off right blue",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn on red and tell me the time",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      },
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "what time is it and which lights are on",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      },
+      {
+        "name": "get_light_status",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn off yellow and turn on red",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      },
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "read-logs",
+    "text": "show me the blue logs",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {
+          "column": "blue"
+        }
+      }
+    ]
+  },
+  {
+    "group": "read-logs",
+    "text": "show me the red log entries",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {
+          "column": "red"
+        }
+      }
+    ]
+  },
+  {
+    "group": "read-logs",
+    "text": "show all the logs",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "read-logs",
+    "text": "show the yellow log entries",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {
+          "column": "yellow"
+        }
+      }
+    ]
+  },
+  {
+    "group": "terminal-history",
+    "text": "show the terminal history",
+    "expected": [
+      {
+        "name": "get_terminal_history",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "terminal-history",
+    "text": "what commands did I run in the terminal",
+    "expected": [
+      {
+        "name": "get_terminal_history",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "terminal-history",
+    "text": "list the terminal command history",
+    "expected": [
+      {
+        "name": "get_terminal_history",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "log the blue left on and right off at 14:30",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "blue",
+          "left": true,
+          "right": false,
+          "time": "14:30"
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "add a blue log with both halves on",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "blue",
+          "left": true,
+          "right": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "log yellow on at 09:15",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "yellow",
+          "on": true,
+          "time": "09:15"
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "add a yellow log entry with the light off",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "yellow",
+          "on": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "log a red on to off transition at 22:00",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "red",
+          "transition": "on-to-off",
+          "time": "22:00"
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "add a red log entry off to on",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "red",
+          "transition": "off-to-on"
+        }
+      }
+    ]
+  },
+  {
+    "group": "update-log",
+    "text": "change the blue log entry at 14:30 so the left half is on",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "blue",
+          "time": "14:30",
+          "left": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "update-log",
+    "text": "change the yellow log entry at 09:15 to off",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "yellow",
+          "time": "09:15",
+          "on": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "delete-log",
+    "text": "delete the yellow log entry at 09:15",
+    "expected": [
+      {
+        "name": "delete_log_entry",
+        "arguments": {
+          "column": "yellow",
+          "time": "09:15"
+        }
+      }
+    ]
+  },
+  {
+    "group": "delete-log",
+    "text": "remove the red log entry from 22:00",
+    "expected": [
+      {
+        "name": "delete_log_entry",
+        "arguments": {
+          "column": "red",
+          "time": "22:00"
+        }
+      }
+    ]
+  },
+  {
+    "group": "clear-logs",
+    "text": "clear all the blue logs",
+    "expected": [
+      {
+        "name": "clear_logs",
+        "arguments": {
+          "column": "blue"
+        }
+      }
+    ]
+  },
+  {
+    "group": "clear-logs",
+    "text": "wipe the red log column, I confirm",
+    "expected": [
+      {
+        "name": "clear_logs",
+        "arguments": {
+          "column": "red"
+        }
+      }
+    ]
+  },
+  {
+    "group": "export-logs",
+    "text": "export the logs as csv",
+    "expected": [
+      {
+        "name": "export_logs",
+        "arguments": {
+          "format": "csv"
+        }
+      }
+    ]
+  },
+  {
+    "group": "export-logs",
+    "text": "export all logs as json",
+    "expected": [
+      {
+        "name": "export_logs",
+        "arguments": {
+          "format": "json"
+        }
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "show the yellow logs and tell me the time",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {
+          "column": "yellow"
+        }
+      },
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn on red and add a red log entry off to on",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      },
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "red",
+          "transition": "off-to-on"
+        }
+      }
+    ]
+  },
+  {
+    "group": "none",
+    "text": "import my logs from a file",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "what is the weather like",
+    "expected": []
+  },
+  {
+    "group": "update-log",
+    "text": "set the red log entry at 10:00 to off to on",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "red",
+          "time": "10:00",
+          "transition": "off-to-on"
+        }
+      }
+    ]
+  },
+  {
+    "group": "delete-log",
+    "text": "delete the blue log from 14:30",
+    "expected": [
+      {
+        "name": "delete_log_entry",
+        "arguments": {
+          "column": "blue",
+          "time": "14:30"
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "add a new yellow log entry at 18:00 with the light on",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "yellow",
+          "time": "18:00",
+          "on": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "record a blue log with the left half off and the right half on",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "blue",
+          "left": false,
+          "right": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "update-log",
+    "text": "change the blue log entry at 09:00 so both halves are off",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "blue",
+          "time": "09:00",
+          "left": false,
+          "right": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "update-log",
+    "text": "update the yellow log at 12:15 to on",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "yellow",
+          "time": "12:15",
+          "on": true
+        }
+      }
+    ]
+  }
+]

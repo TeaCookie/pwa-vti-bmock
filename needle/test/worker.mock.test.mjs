@@ -251,3 +251,48 @@ test('the local noop marker is never sent to the engine, but still drives valida
   assert.deepEqual(plain(res.calls), []);
   assert.equal(res.noAction, true);
 });
+
+test('local-only markers (noop, localPattern) never reach the engine, and time args are validated', async () => {
+  const v3 = JSON.parse(readFileSync(new URL('tools.v3.json', dir), 'utf8'));
+  assert.ok(JSON.stringify(v3).includes('localPattern'), 'v3 really uses localPattern');
+  const w = makeWorld({ outputs: [
+    out([call('set_log_entry', { column: 'yellow', time: '09:15', on: true })]),
+    out([call('set_log_entry', { column: 'yellow', time: 'off', on: true })])
+  ] });
+  w.post({ ...initMsg, tools: v3 });
+  await w.waitFor((m) => m.type === 'ready');
+
+  const sent = JSON.parse(w.log.calls.find((c) => c[0] === 'cactus_init')[3][1]);
+  assert.equal(JSON.stringify(sent).includes('localPattern'), false);
+  assert.equal(sent.length, v3.length);
+  assert.equal(sent.find((t) => t.name === 'set_log_entry').parameters.properties.time.type, 'string');
+
+  w.post({ type: 'complete', id: 1, text: 'log yellow on at 09:15' });
+  const good = await w.waitFor((m) => m.type === 'result' && m.id === 1);
+  assert.equal(good.calls[0].arguments.time, '09:15');
+  w.post({ type: 'complete', id: 2, text: 'change the yellow entry to off' });
+  const bad = await w.waitFor((m) => m.type === 'error' && m.id === 2);
+  assert.equal(bad.code, 'invalid-output');
+  assert.match(bad.message, /wrong format/);
+});
+
+test('v4: localAllowed is stripped before the engine and a column/entry_state mismatch is rejected', async () => {
+  const v4 = JSON.parse(readFileSync(new URL('tools.v4.json', dir), 'utf8'));
+  const w = makeWorld({ outputs: [
+    out([call('set_log_entry', { column: 'blue', entry_state: 'both' })]),
+    out([call('set_log_entry', { column: 'yellow', entry_state: 'left' })])
+  ] });
+  w.post({ ...initMsg, tools: v4 });
+  await w.waitFor((m) => m.type === 'ready');
+  const sentRaw = w.log.calls.find((c) => c[0] === 'cactus_init')[3][1];
+  assert.equal(/localAllowed|localPattern|noop/.test(sentRaw), false, 'no local-only keys reach the engine');
+  assert.ok(sentRaw.includes('entry_state') && sentRaw.includes('"enum"'));
+
+  w.post({ type: 'complete', id: 1, text: 'add a blue log with both halves on' });
+  const good = await w.waitFor((m) => m.type === 'result' && m.id === 1);
+  assert.equal(good.calls[0].arguments.entry_state, 'both');
+  w.post({ type: 'complete', id: 2, text: 'log yellow left' });
+  const bad = await w.waitFor((m) => m.type === 'error' && m.id === 2);
+  assert.equal(bad.code, 'invalid-output');
+  assert.match(bad.message, /not valid for column/);
+});

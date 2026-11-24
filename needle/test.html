@@ -21,6 +21,7 @@
 </head>
 <body>
   <h1>Needle 3 base test (no app wiring)</h1>
+  <div>model: <code id="modelfile">base (assets.manifest.json)</code></div>
   <div>tools: <code id="toolsfile"></code></div>
   <div class="row">
     <button id="load">Load model</button>
@@ -36,6 +37,7 @@
     <label>max tokens <input type="number" id="maxTokens" value="384" min="16" max="1024" style="width:70px"></label>
     <label>confidence threshold <input type="number" id="threshold" value="0" min="0" max="1" step="0.05" style="width:70px"></label>
     <button id="cases" disabled>Run all cases</button>
+    <button id="save" disabled>Save results (JSON)</button>
   </div>
   <div>Result</div>
   <pre id="result">-</pre>
@@ -44,7 +46,7 @@
   <div id="summary"></div>
   <script type="module">
     import { NeedleClient } from './needle-client.js';
-    import './validate.js';
+    import './validate.js?v=2'; // version query: a cached older validate.js lacks the lenient scorers
 
     const $ = (id) => document.getElementById(id);
     const stageLabels = {
@@ -53,10 +55,18 @@
     // ?tools=tools.escape.json (or tools.tight.json / tools.both.json) picks the tool set; default tools.json
     const requested = new URLSearchParams(location.search).get('tools') || 'tools.json';
     const toolsFile = /^tools[\w.-]*\.json$/.test(requested) ? requested : 'tools.json';
-    document.title = 'Needle 3 base test (' + toolsFile + ')';
+    const requestedCases = new URLSearchParams(location.search).get('cases') || '';
+    const casesFile = /^cases[\w.-]*\.json$/.test(requestedCases) ? requestedCases : 'cases.json';
+    // ?manifest=assets.exp1.json swaps the model (a tuned .cact) while keeping the same runtime; default is the base model
+    const requestedManifest = new URLSearchParams(location.search).get('manifest') || '';
+    const manifestFile = /^assets[\w.-]*\.json$/.test(requestedManifest) ? requestedManifest : 'assets.manifest.json';
+    const manifestUrl = new URL(manifestFile, location.href).href;
+    document.title = 'Needle 3 base test (' + toolsFile + ' + ' + casesFile + ' + ' + manifestFile + ')';
     document.getElementById('toolsfile').textContent = toolsFile;
+    document.getElementById('modelfile').textContent = manifestFile;
     const needle = new NeedleClient({
       toolsUrl: new URL(toolsFile, location.href).href,
+      manifestUrl: manifestUrl,
       onProgress: (m) => {
         $('stage').textContent = stageLabels[m.stage] || m.stage;
         if (m.total) { $('bar').max = m.total; $('bar').value = m.loaded; }
@@ -83,6 +93,11 @@
       try {
         const ready = await needle.init();
         $('stage').textContent = 'ready (' + Math.round(performance.now() - t0) + ' ms total, worker ' + ready.loadMs + ' ms)';
+        try {
+          const m = (await (await fetch(manifestUrl)).json()).model;
+          modelInfo = { file: m.file, url: m.url, sha256: m.sha256, size: m.size };
+          $('modelfile').textContent = manifestFile + ' -> ' + m.file + ', ' + (m.size / 1048576).toFixed(1) + ' MB, sha256 ' + String(m.sha256).slice(0, 12);
+        } catch (e) { /* info only */ }
         for (const id of ['text', 'run', 'cases']) $(id).disabled = false;
       } catch (e) {
         $('stage').textContent = 'failed';
@@ -99,6 +114,7 @@
     $('text').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('run').click(); });
 
     let results = [];
+    let modelInfo = null;
 
     // Response-level confidence gate, applied after the fact so a threshold can be tried without re-running.
     function gated(r, threshold) {
@@ -109,15 +125,23 @@
     function score(threshold) {
       const groups = {};
       const failures = [];
+      const V = self.NeedleValidate;
+      if (!V || !V.scoreCaseLenient || !V.scoreNames) throw new Error('validate.js is out of date (cached?). Hard-refresh the page (Ctrl+Shift+R).');
       for (const r of results) {
-        const g = groups[r.c.group] || (groups[r.c.group] = { pass: 0, total: 0 });
+        const g = groups[r.c.group] || (groups[r.c.group] = { pass: 0, lenient: 0, names: 0, total: 0 });
         g.total++;
         const calls = gated(r, threshold);
-        if (calls && self.NeedleValidate.scoreCase(r.c.expected, calls)) g.pass++;
+        if (calls) {
+          if (V.scoreCaseLenient(r.c.expected, calls)) g.lenient++;
+          if (V.scoreNames(r.c.expected, calls)) g.names++;
+        }
+        if (calls && V.scoreCase(r.c.expected, calls)) g.pass++;
         else failures.push({ r, calls });
       }
       return { groups, failures };
     }
+    const ung = (r) => (r.validation && r.validation.ungrounded && r.validation.ungrounded.length ? r.validation.ungrounded.join(', ') : '') + (r.validation && r.validation.negation ? ' [negation]' : '');
+    const sup = (r) => (r.suppressed && r.suppressed.length ? JSON.stringify(r.suppressed) : '');
     const pct = (a, b) => (b ? Math.round((100 * a) / b) + '%' : '-');
 
     function render() {
@@ -128,10 +152,15 @@
       const med = times.length ? times[Math.floor(times.length / 2)] : null;
       const worst = times.length ? times[times.length - 1] : null;
 
-      let html = '<table><tr><th>group</th><th>passed (threshold ' + threshold + ')</th></tr>';
+      let html = '<table><tr><th>group</th><th>strict (threshold ' + threshold + ')</th><th>lenient (extra args ok)</th><th>tool names only</th></tr>';
+      const tot = { pass: 0, lenient: 0, names: 0, total: 0 };
       for (const [name, g] of Object.entries(groups)) {
-        html += '<tr><td>' + esc(name) + '</td><td class="' + (g.pass === g.total ? 'pass' : 'fail') + '">' + g.pass + ' / ' + g.total + '</td></tr>';
+        for (const k of Object.keys(tot)) tot[k] += g[k];
+        html += '<tr><td>' + esc(name) + '</td><td class="' + (g.pass === g.total ? 'pass' : 'fail') + '">' + g.pass + ' / ' + g.total + '</td><td>' +
+          g.lenient + ' / ' + g.total + '</td><td>' + g.names + ' / ' + g.total + '</td></tr>';
       }
+      html += '<tr><td><b>all</b></td><td><b>' + tot.pass + ' / ' + tot.total + ' (' + pct(tot.pass, tot.total) + ')</b></td><td><b>' + tot.lenient + ' / ' + tot.total +
+        ' (' + pct(tot.lenient, tot.total) + ')</b></td><td><b>' + tot.names + ' / ' + tot.total + ' (' + pct(tot.names, tot.total) + ')</b></td></tr>';
       html += '</table><div>latency median ' + med + ' ms, worst ' + worst + ' ms (tools=' + toolsFile + ', no_action chosen in ' + results.filter((r) => r.noAction).length + ' cases, reset=' + $('reset').checked + ', maxTokens=' + $('maxTokens').value + ')</div>';
 
       // Sweep: how does a response-level confidence threshold trade "no tool fits" against real commands?
@@ -151,45 +180,79 @@
         }
         html += '</table>';
       } else {
-        html += '<p class="fail">No numeric top-level "confidence" in the engine output, so no threshold sweep. Check the raw output.</p>';
+        html += '<p>No confidence in the engine output, so no threshold sweep. Expected for a locally fine-tuned model: <code>cactus build</code> drops the confidence head. Scores above are the raw model output.</p>';
       }
 
       if (failures.length) {
-        html += '<p>Failures at this threshold</p><table><tr><th>text</th><th>expected</th><th>got</th><th>conf</th></tr>';
+        html += '<p>Failures at this threshold</p><table><tr><th>text</th><th>expected</th><th>got</th><th>conf</th><th>suppressed</th><th>ungrounded</th></tr>';
         for (const f of failures) {
           html += '<tr><td>' + esc(f.r.c.text) + '</td><td><code>' + esc(JSON.stringify(f.r.c.expected)) + '</code></td><td class="fail"><code>' +
-            esc(f.calls ? JSON.stringify(f.calls) : '') + '</code> ' + esc(f.r.err || 'wrong calls') + '</td><td>' +
-            (f.r.confidence === null ? '-' : f.r.confidence.toFixed(3)) + '</td></tr>';
+            esc(f.calls ? JSON.stringify(f.calls) : '') + '</code> ' + esc(f.r.err || 'wrong calls') + (f.r.errRaw ? '<br>raw: <code>' + esc(f.r.errRaw) + '</code>' : '') + '</td><td>' +
+            (f.r.confidence === null ? '-' : f.r.confidence.toFixed(3)) + '</td><td><code>' + esc(sup(f.r)) + '</code></td><td>' + esc(ung(f.r)) + '</td></tr>';
         }
         html += '</table>';
       }
 
-      html += '<details><summary>Every case with confidence</summary><table><tr><th>group</th><th>text</th><th>calls</th><th>conf</th><th>ms</th><th>no_action</th></tr>';
+      html += '<details><summary>Every case with confidence</summary><table><tr><th>group</th><th>text</th><th>calls</th><th>conf</th><th>ms</th><th>no_action</th><th>suppressed (below 0.1 floor)</th><th>ungrounded</th></tr>';
       for (const r of results) {
         html += '<tr><td>' + esc(r.c.group) + '</td><td>' + esc(r.c.text) + '</td><td><code>' + esc(r.err || JSON.stringify(r.calls)) + '</code></td><td>' +
-          (r.confidence === null ? '-' : r.confidence.toFixed(3)) + '</td><td>' + (r.latencyMs ?? '-') + '</td><td>' + (r.noAction ? 'yes' : '') + '</td></tr>';
+          (r.confidence === null ? '-' : r.confidence.toFixed(3)) + '</td><td>' + (r.latencyMs ?? '-') + '</td><td>' + (r.noAction ? 'yes' : '') + '</td><td><code>' + esc(sup(r)) + '</code></td><td>' + esc(ung(r)) + '</td></tr>';
       }
       html += '</table></details>';
       $('summary').innerHTML = html;
     }
-    $('threshold').addEventListener('change', render);
+    $('threshold').addEventListener('change', () => { try { render(); } catch (e) { $('summary').innerHTML = '<p class="fail">Could not render results: ' + esc(e.message) + '</p>'; } });
 
     $('cases').onclick = async () => {
       $('cases').disabled = true;
-      const cases = await (await fetch('./cases.json')).json();
+      const caseFile = casesFile;
+      const cases = await (await fetch('./' + caseFile)).json();
       results = [];
       for (const c of cases) {
-        const r = { c, calls: null, confidence: null, latencyMs: null, noAction: false, err: '' };
+        const r = { c, raw: '', errRaw: '', suppressed: [], validation: null, calls: null, confidence: null, latencyMs: null, noAction: false, err: '' };
         try {
           const res = await needle.complete(c.text, opts());
-          r.calls = res.calls; r.confidence = res.confidence; r.latencyMs = res.latencyMs; r.noAction = !!res.noAction;
-        } catch (e) { r.err = e.code + ': ' + e.message; }
+          r.calls = res.calls; r.confidence = res.confidence; r.latencyMs = res.latencyMs; r.noAction = !!res.noAction; r.suppressed = res.suppressed || []; r.validation = res.validation || null; r.raw = res.raw || '';
+        } catch (e) { r.err = e.code + ': ' + e.message; r.errRaw = e.raw ? String(e.raw).slice(0, 400) : ''; }
         results.push(r);
         $('stage').textContent = 'cases ' + results.length + '/' + cases.length;
       }
       $('stage').textContent = 'cases done';
-      render();
+      try { render(); } catch (e) { $('summary').innerHTML = '<p class="fail">Could not render results: ' + esc(e.message) + '</p>'; }
       $('cases').disabled = false;
+      $('save').disabled = false;
+    };
+
+    // Everything needed to compare runs later without re-running the model.
+    $('save').onclick = () => {
+      const V = self.NeedleValidate;
+      const rows = results.map((r) => ({
+        group: r.c.group, text: r.c.text, expected: r.c.expected, calls: r.calls, error: r.err || null,
+        confidence: r.confidence, latencyMs: r.latencyMs, noAction: r.noAction, suppressed: r.suppressed,
+        validation: r.validation, raw: r.err ? r.errRaw : r.raw,
+        strict: !!(r.calls && V.scoreCase(r.c.expected, r.calls)),
+        lenient: !!(r.calls && V.scoreCaseLenient(r.c.expected, r.calls)),
+        names: !!(r.calls && V.scoreNames(r.c.expected, r.calls))
+      }));
+      const out = {
+        meta: {
+          savedAt: new Date().toISOString(), toolsFile, casesFile, manifestFile, model: modelInfo,
+          maxTokens: Number($('maxTokens').value) || 384, resetBeforeEach: $('reset').checked,
+          mode: 'raw: no guard, no confidence threshold', userAgent: navigator.userAgent
+        },
+        summary: {
+          total: rows.length, strict: rows.filter((x) => x.strict).length, lenient: rows.filter((x) => x.lenient).length,
+          names: rows.filter((x) => x.names).length
+        },
+        results: rows
+      };
+      const base = manifestFile.replace(/^assets\.?|\.json$/g, '').replace(/^manifest$/, '') || 'base';
+      const name = 'results_' + base + '_' + casesFile.replace(/^cases\.?|\.json$/g, '') + '.json';
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' }));
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     };
   </script>
 </body>

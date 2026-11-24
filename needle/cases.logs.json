@@ -1,0 +1,271 @@
+[
+  {
+    "group": "read-logs",
+    "text": "show me the blue logs",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {
+          "column": "blue"
+        }
+      }
+    ]
+  },
+  {
+    "group": "read-logs",
+    "text": "show me the red log entries",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {
+          "column": "red"
+        }
+      }
+    ]
+  },
+  {
+    "group": "read-logs",
+    "text": "show all the logs",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {
+          "column": "all"
+        }
+      }
+    ]
+  },
+  {
+    "group": "read-logs",
+    "text": "show the first 5 yellow log entries",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {
+          "column": "yellow",
+          "limit": 5
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "log the blue left on and right off at 14:30",
+    "expected": [
+      {
+        "name": "create_blue_log_entry",
+        "arguments": {
+          "left": true,
+          "right": false,
+          "time": "14:30"
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "add a blue log with both halves on",
+    "expected": [
+      {
+        "name": "create_blue_log_entry",
+        "arguments": {
+          "left": true,
+          "right": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "log yellow on at 09:15",
+    "expected": [
+      {
+        "name": "create_yellow_log_entry",
+        "arguments": {
+          "on": true,
+          "time": "09:15"
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "add a yellow log entry with the light off",
+    "expected": [
+      {
+        "name": "create_yellow_log_entry",
+        "arguments": {
+          "on": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "log a red on to off transition at 22:00",
+    "expected": [
+      {
+        "name": "create_red_log_entry",
+        "arguments": {
+          "transition": "on-to-off",
+          "time": "22:00"
+        }
+      }
+    ]
+  },
+  {
+    "group": "create-log",
+    "text": "add a red log entry off to on",
+    "expected": [
+      {
+        "name": "create_red_log_entry",
+        "arguments": {
+          "transition": "off-to-on"
+        }
+      }
+    ]
+  },
+  {
+    "group": "update-log",
+    "text": "update blue log entry abc123 so the left half is on",
+    "expected": [
+      {
+        "name": "update_blue_log_entry",
+        "arguments": {
+          "id": "abc123",
+          "left": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "update-log",
+    "text": "change yellow log entry y42 to off",
+    "expected": [
+      {
+        "name": "update_yellow_log_entry",
+        "arguments": {
+          "id": "y42",
+          "on": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "update-log",
+    "text": "set the time of red log entry r7 to 16:45",
+    "expected": [
+      {
+        "name": "update_red_log_entry",
+        "arguments": {
+          "id": "r7",
+          "time": "16:45"
+        }
+      }
+    ]
+  },
+  {
+    "group": "delete-log",
+    "text": "delete the yellow log entry y42",
+    "expected": [
+      {
+        "name": "delete_log_entry",
+        "arguments": {
+          "column": "yellow",
+          "id": "y42"
+        }
+      }
+    ]
+  },
+  {
+    "group": "delete-log",
+    "text": "remove red log entry r7",
+    "expected": [
+      {
+        "name": "delete_log_entry",
+        "arguments": {
+          "column": "red",
+          "id": "r7"
+        }
+      }
+    ]
+  },
+  {
+    "group": "clear-logs",
+    "text": "clear all the blue logs",
+    "expected": [
+      {
+        "name": "clear_logs",
+        "arguments": {
+          "column": "blue"
+        }
+      }
+    ]
+  },
+  {
+    "group": "clear-logs",
+    "text": "wipe the red log column, I confirm",
+    "expected": [
+      {
+        "name": "clear_logs",
+        "arguments": {
+          "column": "red"
+        }
+      }
+    ]
+  },
+  {
+    "group": "export-logs",
+    "text": "export the logs as csv",
+    "expected": [
+      {
+        "name": "export_logs",
+        "arguments": {
+          "format": "csv"
+        }
+      }
+    ]
+  },
+  {
+    "group": "export-logs",
+    "text": "export all logs as json",
+    "expected": [
+      {
+        "name": "export_logs",
+        "arguments": {
+          "format": "json"
+        }
+      }
+    ]
+  },
+  {
+    "group": "none",
+    "text": "hello",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "tell me a joke",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "what is the weather like",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "turn on the red light",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "what time is it",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "import my logs from a file",
+    "expected": []
+  }
+]

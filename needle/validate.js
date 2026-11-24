@@ -5,6 +5,7 @@
  * parseResult(raw, tools)  -> { ok:true, calls, suppressed, confidence, timings, warnings }
  *                           | { ok:false, code, message }
  * scoreCase(expected, calls) -> boolean (exact match on names + arguments, in order)
+ * scoreCaseLenient / scoreNames -> boolean (extra arguments allowed / names only)
  */
 (function (root) {
   'use strict';
@@ -47,6 +48,22 @@
       }
       if (schema.enum && !schema.enum.includes(args[key])) {
         return call.name + ': argument "' + key + '" must be one of ' + schema.enum.join(', ');
+      }
+      // A string argument is never meaningfully empty.
+      if (schema.type === 'string' && args[key].trim() === '') {
+        return call.name + ': argument "' + key + '" is empty';
+      }
+      // "localPattern" is checked here only. The worker strips it before the tools go to the engine.
+      if (schema.localPattern && !new RegExp(schema.localPattern).test(args[key])) {
+        return call.name + ': argument "' + key + '" has the wrong format (' + JSON.stringify(args[key]) + ')';
+      }
+    }
+    // "localAllowed" (tool-level, local only): which values of one argument are valid for each value of another.
+    const rule = tool.localAllowed;
+    if (rule && rule.arg in args && rule.by in args) {
+      const allowed = rule.values[args[rule.by]];
+      if (allowed && !allowed.includes(args[rule.arg])) {
+        return call.name + ': "' + rule.arg + '" ' + JSON.stringify(args[rule.arg]) + ' is not valid for ' + rule.by + ' ' + JSON.stringify(args[rule.by]);
       }
     }
     return { name: call.name, arguments: args };
@@ -99,6 +116,7 @@
       calls: calls,
       noAction: noAction,
       suppressed: Array.isArray(parsed.suppressed_calls) ? parsed.suppressed_calls : [],
+      validation: parsed.validation && typeof parsed.validation === 'object' ? parsed.validation : null,
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : null,
       timings: {
         prefill_tps: parsed.prefill_tps != null ? parsed.prefill_tps : null,
@@ -123,7 +141,26 @@
     return true;
   }
 
-  const api = { parseResult: parseResult, scoreCase: scoreCase };
+  /** Same tools in the same order, ignoring arguments. */
+  function scoreNames(expected, calls) {
+    if (!Array.isArray(expected) || !Array.isArray(calls)) return false;
+    if (expected.length !== calls.length) return false;
+    for (let i = 0; i < expected.length; i++) if (expected[i].name !== calls[i].name) return false;
+    return true;
+  }
+
+  /** Right tools, and every expected argument present with the expected value; extra optional arguments are allowed. */
+  function scoreCaseLenient(expected, calls) {
+    if (!scoreNames(expected, calls)) return false;
+    for (let i = 0; i < expected.length; i++) {
+      const a = expected[i].arguments || {};
+      const b = calls[i].arguments || {};
+      for (const k of Object.keys(a)) if (!(k in b) || a[k] !== b[k]) return false;
+    }
+    return true;
+  }
+
+  const api = { parseResult: parseResult, scoreCase: scoreCase, scoreCaseLenient: scoreCaseLenient, scoreNames: scoreNames };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.NeedleValidate = api;
 })(typeof self !== 'undefined' ? self : globalThis);

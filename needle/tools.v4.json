@@ -1,0 +1,223 @@
+[
+  {
+    "name": "get_light_status",
+    "description": "Get whether each indicator light is currently on or off.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "get_clock_time",
+    "description": "Get the current time shown on the clock.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "read_logs",
+    "description": "Show, list or view the saved log entries of one log column, or of all columns when no column is given. These are the manual logs, not the terminal.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red"
+          ],
+          "description": "Which log column. Omit for all columns."
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "get_terminal_history",
+    "description": "Show the history of commands typed in the terminal. Not the log entries.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "toggle_light",
+    "description": "Turn one indicator light on or off.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "light": {
+          "type": "string",
+          "enum": [
+            "blue-left",
+            "blue-right",
+            "yellow",
+            "red"
+          ],
+          "description": "Which light to change."
+        },
+        "state": {
+          "type": "boolean",
+          "description": "true to turn the light on, false to turn it off."
+        }
+      },
+      "required": [
+        "light",
+        "state"
+      ]
+    }
+  },
+  {
+    "name": "set_yellow_timing",
+    "description": "Set the range of the yellow light's automatic random toggle interval, in milliseconds.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "minMs": {
+          "type": "integer",
+          "description": "Minimum interval in milliseconds, at least 1000."
+        },
+        "maxMs": {
+          "type": "integer",
+          "description": "Maximum interval in milliseconds, at most 60000."
+        }
+      },
+      "required": [
+        "minMs",
+        "maxMs"
+      ]
+    }
+  },
+  {
+    "name": "set_log_entry",
+    "description": "Record or change an entry in the blue, yellow or red log column at a time. If an entry already exists at that time it is changed.",
+    "localAllowed": {
+      "arg": "entry_state",
+      "by": "column",
+      "values": {
+        "blue": [
+          "left",
+          "right",
+          "both",
+          "none"
+        ],
+        "yellow": [
+          "on",
+          "off"
+        ],
+        "red": [
+          "on-to-off",
+          "off-to-on"
+        ]
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red"
+          ],
+          "description": "Which log column: blue, yellow or red."
+        },
+        "entry_state": {
+          "type": "string",
+          "enum": [
+            "left",
+            "right",
+            "both",
+            "none",
+            "on",
+            "off",
+            "on-to-off",
+            "off-to-on"
+          ],
+          "description": "Blue: which halves are on (left, right, both or none). Yellow: on or off. Red: on-to-off or off-to-on."
+        },
+        "time": {
+          "type": "string",
+          "localPattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+          "description": "The time of the entry, 24-hour HH:MM, for example 14:30. Omit for the current time."
+        }
+      },
+      "required": [
+        "column",
+        "entry_state"
+      ]
+    }
+  },
+  {
+    "name": "delete_log_entry",
+    "description": "Delete one log entry. The entry is found by the time it was logged.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red"
+          ],
+          "description": "Which log column: blue, yellow or red."
+        },
+        "time": {
+          "type": "string",
+          "localPattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+          "description": "The time of the entry to delete, 24-hour HH:MM."
+        }
+      },
+      "required": [
+        "column",
+        "time"
+      ]
+    }
+  },
+  {
+    "name": "clear_logs",
+    "description": "Delete ALL log entries in one column. Destructive.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "yellow",
+            "red"
+          ],
+          "description": "Which log column to clear."
+        }
+      },
+      "required": [
+        "column"
+      ]
+    }
+  },
+  {
+    "name": "export_logs",
+    "description": "Export all log data as JSON or CSV.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "json",
+            "csv"
+          ],
+          "description": "Export format."
+        }
+      },
+      "required": []
+    }
+  }
+]

@@ -1,0 +1,365 @@
+[
+  {
+    "group": "toggle-on",
+    "text": "switch the red light on",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "red",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "shut off the yellow light",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "put on the left blue",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-left",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-off",
+    "text": "turn the right blue light off",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "toggle-on",
+    "text": "could you switch the yellow one on",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "yellow",
+          "state": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "status",
+    "text": "are any lights on right now",
+    "expected": [
+      {
+        "name": "get_light_status",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "status",
+    "text": "tell me the state of the indicators",
+    "expected": [
+      {
+        "name": "get_light_status",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "time",
+    "text": "what's the time",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "time",
+    "text": "show me the clock",
+    "expected": [
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "set-log",
+    "text": "log red off to on at 11:20",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "red",
+          "time": "11:20",
+          "transition": "off-to-on"
+        }
+      }
+    ]
+  },
+  {
+    "group": "set-log",
+    "text": "record yellow off",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "yellow",
+          "on": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "set-log",
+    "text": "log blue both halves off at 07:45",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "blue",
+          "time": "07:45",
+          "left": false,
+          "right": false
+        }
+      }
+    ]
+  },
+  {
+    "group": "set-log",
+    "text": "change the yellow entry at 15:00 to on",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "yellow",
+          "time": "15:00",
+          "on": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "set-log",
+    "text": "update the blue log at 12:00 so only the right half is on",
+    "expected": [
+      {
+        "name": "set_log_entry",
+        "arguments": {
+          "column": "blue",
+          "time": "12:00",
+          "left": false,
+          "right": true
+        }
+      }
+    ]
+  },
+  {
+    "group": "delete-log",
+    "text": "delete the red log entry at 03:10",
+    "expected": [
+      {
+        "name": "delete_log_entry",
+        "arguments": {
+          "column": "red",
+          "time": "03:10"
+        }
+      }
+    ]
+  },
+  {
+    "group": "delete-log",
+    "text": "remove the yellow entry from 21:45",
+    "expected": [
+      {
+        "name": "delete_log_entry",
+        "arguments": {
+          "column": "yellow",
+          "time": "21:45"
+        }
+      }
+    ]
+  },
+  {
+    "group": "clear-logs",
+    "text": "empty the yellow log",
+    "expected": [
+      {
+        "name": "clear_logs",
+        "arguments": {
+          "column": "yellow"
+        }
+      }
+    ]
+  },
+  {
+    "group": "export-logs",
+    "text": "give me a csv export of the logs",
+    "expected": [
+      {
+        "name": "export_logs",
+        "arguments": {
+          "format": "csv"
+        }
+      }
+    ]
+  },
+  {
+    "group": "read-logs",
+    "text": "list the red logs",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {
+          "column": "red"
+        }
+      }
+    ]
+  },
+  {
+    "group": "read-logs",
+    "text": "display all log entries",
+    "expected": [
+      {
+        "name": "read_logs",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "terminal-history",
+    "text": "what did I type in the terminal earlier",
+    "expected": [
+      {
+        "name": "get_terminal_history",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "yellow-timing",
+    "text": "set yellow to toggle between 5000 and 20000 ms",
+    "expected": [
+      {
+        "name": "set_yellow_timing",
+        "arguments": {
+          "minMs": 5000,
+          "maxMs": 20000
+        }
+      }
+    ]
+  },
+  {
+    "group": "compound",
+    "text": "turn off blue right and show the clock",
+    "expected": [
+      {
+        "name": "toggle_light",
+        "arguments": {
+          "light": "blue-right",
+          "state": false
+        }
+      },
+      {
+        "name": "get_clock_time",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "group": "none",
+    "text": "what's the capital of France",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "remind me to call mom",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "how are you today",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "open the garage door",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "who won the game last night",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "translate hello into spanish",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "set a timer for five minutes",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "turn the brightness up",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "what's my name",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "see you later",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "send an email to Sam",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "roll a dice",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "what's the temperature outside",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "make me a sandwich",
+    "expected": []
+  },
+  {
+    "group": "none",
+    "text": "pause the music",
+    "expected": []
+  }
+]

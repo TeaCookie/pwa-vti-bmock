@@ -27,7 +27,7 @@ export class NeedleClient {
   async init() {
     if (this.initWaiter) return this.initWaiter.promise;
     const toolsResponse = await fetch(this.toolsUrl);
-    if (!toolsResponse.ok) throw this._error('asset-fetch', 'tools.json: HTTP ' + toolsResponse.status);
+    if (!toolsResponse.ok) throw this._error('asset-fetch', this.toolsUrl + ': HTTP ' + toolsResponse.status);
     const tools = await toolsResponse.json();
 
     // Absolute URL: the worker resolves it itself, and the page's service worker is not involved.

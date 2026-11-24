@@ -1,0 +1,171 @@
+  backend   gpu  float32
+  depth     20 layers
+  data      1969 examples  seq_len 1024  cap 2048
+  numerics  CQ W4 STE + A8 (matches export)
+  lora      rank 32  alpha 64  5 weight groups
+  holdout   196 examples for validation
+  schedule  8880 steps  warmup 444  cosine decay  clip 1.0  (compiling...)
+2026-11-22 02:22:16.662513: E external/xla/xla/service/slow_operation_alarm.cc:73] Constant folding an instruction is taking > 1s:
+
+  %dot.150 = f32[110592,128]{1,0} dot(%constant.1718, %constant.298), lhs_contracting_dims={1}, rhs_contracting_dims={0}, metadata={op_name="jit(train_step)/jit(main)/dot_general" source_file="/home/saya/.local/lib/python3.10/site-packages/cactus/model/quantize.py" source_line=127}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-11-22 02:22:16.956302: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 1.293958934s
+Constant folding an instruction is taking > 1s:
+
+  %dot.150 = f32[110592,128]{1,0} dot(%constant.1718, %constant.298), lhs_contracting_dims={1}, rhs_contracting_dims={0}, metadata={op_name="jit(train_step)/jit(main)/dot_general" source_file="/home/saya/.local/lib/python3.10/site-packages/cactus/model/quantize.py" source_line=127}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-11-22 02:22:19.179124: E external/xla/xla/service/slow_operation_alarm.cc:73] Constant folding an instruction is taking > 2s:
+
+  %dot.156 = f32[110592,128]{1,0} dot(%constant.1781, %constant.298), lhs_contracting_dims={1}, rhs_contracting_dims={0}, metadata={op_name="jit(train_step)/jit(main)/dot_general" source_file="/home/saya/.local/lib/python3.10/site-packages/cactus/model/quantize.py" source_line=127}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-11-22 02:22:20.007383: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 2.828390797s
+Constant folding an instruction is taking > 2s:
+
+  %dot.156 = f32[110592,128]{1,0} dot(%constant.1781, %constant.298), lhs_contracting_dims={1}, rhs_contracting_dims={0}, metadata={op_name="jit(train_step)/jit(main)/dot_general" source_file="/home/saya/.local/lib/python3.10/site-packages/cactus/model/quantize.py" source_line=127}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+  step      177/8880  loss 0.6762
+  step      354/8880  loss 0.5488
+2026-11-22 02:45:49.586671: E external/xla/xla/service/slow_operation_alarm.cc:73] Constant folding an instruction is taking > 4s:
+
+  %get-tuple-element.1601 = f32[14155776]{0} get-tuple-element(%tuple.221), index=3
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-11-22 02:45:52.150023: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 6.563486435s
+Constant folding an instruction is taking > 4s:
+
+  %get-tuple-element.1601 = f32[14155776]{0} get-tuple-element(%tuple.221), index=3
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-11-22 02:51:00.762781: E external/xla/xla/service/slow_operation_alarm.cc:73] Constant folding an instruction is taking > 8s:
+
+  %reshape.488 = f32[49152,128]{1,0} reshape(%constant.160)
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-11-22 02:51:03.542352: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 10.77969466s
+Constant folding an instruction is taking > 8s:
+
+  %reshape.488 = f32[49152,128]{1,0} reshape(%constant.160)
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-11-22 02:51:25.854185: E external/xla/xla/service/slow_operation_alarm.cc:73] Constant folding an instruction is taking > 16s:
+
+  %concatenate.24 = f32[58368,128]{1,0} concatenate(%constant.1318, %constant.1320), dimensions={0}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-11-22 02:51:29.623196: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 19.76913177s
+Constant folding an instruction is taking > 16s:
+
+  %concatenate.24 = f32[58368,128]{1,0} concatenate(%constant.1318, %constant.1320), dimensions={0}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-11-22 02:53:16.712607: E external/xla/xla/service/slow_operation_alarm.cc:73] Constant folding an instruction is taking > 32s:
+
+  %dot.46 = f32[110592,128]{1,0} dot(%constant.1405, %constant.184), lhs_contracting_dims={1}, rhs_contracting_dims={0}, metadata={op_name="jit(loss_fn)/jit(main)/dot_general" source_file="/home/saya/.local/lib/python3.10/site-packages/cactus/model/quantize.py" source_line=127}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-11-22 02:54:11.801793: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 1m27.089400041s
+Constant folding an instruction is taking > 32s:
+
+  %dot.46 = f32[110592,128]{1,0} dot(%constant.1405, %constant.184), lhs_contracting_dims={1}, rhs_contracting_dims={0}, metadata={op_name="jit(loss_fn)/jit(main)/dot_general" source_file="/home/saya/.local/lib/python3.10/site-packages/cactus/model/quantize.py" source_line=127}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+  epoch     1/20  loss 0.3210  val 0.2845
+  step      531/8880  loss 0.1732
+  step      708/8880  loss 0.2484
+  step      885/8880  loss 0.1357
+  epoch     2/20  loss 0.1806  val 0.1200
+  step      1062/8880  loss 0.1854
+  step      1239/8880  loss 0.2735
+  epoch     3/20  loss 0.0056  val 0.0998
+  step      1416/8880  loss 0.0129
+  step      1593/8880  loss 0.0694
+  step      1770/8880  loss 0.1138
+  epoch     4/20  loss 0.0524  val 0.0895
+  step      1947/8880  loss 0.0426
+  step      2124/8880  loss 0.1333
+  epoch     5/20  loss 0.0022  val 0.0866
+  step      2301/8880  loss 0.0632
+  step      2478/8880  loss 0.0732
+  step      2655/8880  loss 0.0347
+  epoch     6/20  loss 0.1828  val 0.0836
+  step      2832/8880  loss 0.0697
+  step      3009/8880  loss 0.0597
+  epoch     7/20  loss 0.0014  val 0.0851
+  step      3186/8880  loss 0.0325
+  step      3363/8880  loss 0.0846
+  step      3540/8880  loss 0.0793
+  epoch     8/20  loss 0.0011  val 0.0835
+  step      3717/8880  loss 0.1343
+  step      3894/8880  loss 0.0664
+  epoch     9/20  loss 0.0153  val 0.0856
+  step      4071/8880  loss 0.0473
+  step      4248/8880  loss 0.0788
+  step      4425/8880  loss 0.0287
+  epoch     10/20  loss 0.0808  val 0.0856
+  step      4602/8880  loss 0.0001
+  step      4779/8880  loss 0.0249
+  epoch     11/20  loss 0.0000  val 0.0849
+  step      4956/8880  loss 0.0121
+  step      5133/8880  loss 0.0314
+  step      5310/8880  loss 0.0474
+  epoch     12/20  loss 0.0003  val 0.0933
+  step      5487/8880  loss 0.1413
+  step      5664/8880  loss 0.0208
+  epoch     13/20  loss 0.0034  val 0.0891
+  step      5841/8880  loss 0.1048
+  step      6018/8880  loss 0.0225
+  step      6195/8880  loss 0.0333
+  epoch     14/20  loss 0.0000  val 0.0909
+  step      6372/8880  loss 0.0544
+  step      6549/8880  loss 0.1111
+  epoch     15/20  loss 0.0000  val 0.0939
+  step      6726/8880  loss 0.0007
+  step      6903/8880  loss 0.0243
+  step      7080/8880  loss 0.0454
+  epoch     16/20  loss 0.0000  val 0.0977
+  step      7257/8880  loss 0.0197
+  step      7434/8880  loss 0.0965
+  epoch     17/20  loss 0.0480  val 0.0994
+  step      7611/8880  loss 0.0124
+  step      7788/8880  loss 0.0234
+  step      7965/8880  loss 0.0005
+  epoch     18/20  loss 0.0000  val 0.0996
+  step      8142/8880  loss 0.0139
+  step      8319/8880  loss 0.0034
+  epoch     19/20  loss 0.0000  val 0.0997
+  step      8496/8880  loss 0.0675
+  step      8673/8880  loss 0.0350
+  step      8850/8880  loss 0.0458
+  epoch     20/20  loss 0.0014  val 0.0998
+  accuracy  184/196 held-out calls exact, scored on the W4 weights the archive ships
+  adapter   finetune/checkpoints/exp1_adapter.safetensors
+  next      cactus build checkpoints/needle3.safetensors --lora finetune/checkpoints/exp1_adapter.safetensors
+  note      local tuning leaves the confidence head untrained; cactus build drops it and confidence reports None
