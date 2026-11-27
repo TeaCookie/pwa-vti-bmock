@@ -1,0 +1,156 @@
+{
+  "contractVersion": "needle-tools-v5",
+  "schemaPath": "needle/tools.v5.json",
+  "modelManifest": "needle/assets.exp1_20l.json",
+  "tools": [
+    {
+      "name": "get_light_status",
+      "valid": {},
+      "invalid": {
+        "unexpected": true
+      }
+    },
+    {
+      "name": "get_clock_time",
+      "valid": {},
+      "invalid": {
+        "timezone": "UTC"
+      }
+    },
+    {
+      "name": "read_logs",
+      "valid": {
+        "column": "blue"
+      },
+      "invalid": {
+        "column": "all"
+      }
+    },
+    {
+      "name": "get_terminal_history",
+      "valid": {},
+      "invalid": {
+        "limit": 10
+      }
+    },
+    {
+      "name": "toggle_light",
+      "valid": {
+        "light": "red",
+        "state": true
+      },
+      "invalid": {
+        "light": "red",
+        "state": "on"
+      }
+    },
+    {
+      "name": "set_log_entry",
+      "valid": {
+        "column": "yellow",
+        "on": true,
+        "time": "09:15"
+      },
+      "invalid": {
+        "column": "yellow",
+        "on": "true"
+      }
+    },
+    {
+      "name": "delete_log_entry",
+      "valid": {
+        "column": "red",
+        "time": "22:00"
+      },
+      "invalid": {
+        "column": "red"
+      }
+    },
+    {
+      "name": "clear_logs",
+      "valid": {
+        "column": "blue"
+      },
+      "invalid": {
+        "column": "green"
+      }
+    },
+    {
+      "name": "export_logs",
+      "valid": {
+        "format": "csv"
+      },
+      "invalid": {
+        "format": "xml"
+      }
+    }
+  ],
+  "edgeCases": [
+    {
+      "name": "read_logs",
+      "arguments": {},
+      "expected": "Valid: omission selects all columns."
+    },
+    {
+      "name": "set_log_entry",
+      "arguments": {
+        "column": "blue",
+        "left": true,
+        "right": false,
+        "time": "14:30"
+      },
+      "expected": "Valid blue entry with both halves specified."
+    },
+    {
+      "name": "set_log_entry",
+      "arguments": {
+        "column": "yellow",
+        "on": false,
+        "time": "00:00"
+      },
+      "expected": "Valid midnight time."
+    },
+    {
+      "name": "set_log_entry",
+      "arguments": {
+        "column": "red",
+        "transition": "off-to-on",
+        "time": "23:59"
+      },
+      "expected": "Valid final minute of day."
+    },
+    {
+      "name": "set_log_entry",
+      "arguments": {
+        "column": "yellow",
+        "on": true,
+        "time": "24:00"
+      },
+      "expected": "Invalid hour."
+    },
+    {
+      "name": "delete_log_entry",
+      "arguments": {
+        "column": "blue",
+        "time": "12:60"
+      },
+      "expected": "Invalid minute."
+    },
+    {
+      "name": "toggle_light",
+      "arguments": {
+        "light": "blue-left",
+        "state": false
+      },
+      "expected": "Valid false is distinct from an omitted state."
+    },
+    {
+      "name": "clear_logs",
+      "arguments": {
+        "column": "red",
+        "confirm": true
+      },
+      "expected": "Invalid unexpected model argument; confirmation belongs to the UI."
+    }
+  ]
+}
