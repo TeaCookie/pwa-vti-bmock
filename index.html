@@ -9,6 +9,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="assistant.css">
 </head>
 <body>
   <div class="container">
@@ -137,6 +138,28 @@
         <button type="button" class="btn btn-danger" id="confirmationConfirm">Delete</button></footer>
     </dialog>
 
+    <button id="needleAssistantLauncher" type="button" aria-label="Open assistant" aria-controls="needleAssistantPanel" aria-expanded="false">
+      <span class="needle-assistant-mark" aria-hidden="true">N3</span>
+    </button>
+    <aside id="needleAssistantPanel" role="region" aria-labelledby="needleAssistantTitle" hidden>
+      <header class="needle-assistant-header">
+        <div class="needle-assistant-heading">
+          <h2 class="needle-assistant-title" id="needleAssistantTitle">Needle Assistant</h2>
+          <span class="needle-assistant-subtitle">On-device assistant</span>
+        </div>
+        <button class="needle-assistant-close" id="needleAssistantClose" type="button" aria-label="Close assistant">×</button>
+      </header>
+      <div class="needle-assistant-output" id="needleAssistantOutput" role="log" aria-live="polite" aria-relevant="additions text">
+        <p class="needle-assistant-empty">Ask the assistant about your indicator lights and logs.</p>
+      </div>
+      <div class="needle-assistant-status" id="needleAssistantStatus" role="status" aria-live="polite">Ready</div>
+      <p class="needle-assistant-error" id="needleAssistantError" role="alert" hidden></p>
+      <form class="needle-assistant-form" id="needleAssistantForm">
+        <input class="needle-assistant-input" id="needleAssistantInput" type="text" name="message" placeholder="Message the assistant…" autocomplete="off" aria-label="Message the assistant">
+        <button class="needle-assistant-send" type="submit">Send</button>
+      </form>
+    </aside>
+
   <script src="yellow-light.js"></script>
   <script src="app.js"></script>
   <script src="app-api.js"></script>
@@ -154,6 +177,7 @@
   <script src="adapter/registry.js"></script>
   <script src="adapter/index.js"></script>
   <script src="adapter/confirmation-ui.js"></script>
+  <script src="assistant-ui.js"></script>
   <script>
     if (window.IndicatorLights && window.NeedleToolAdapter && window.NeedleAdapterConfirmations) {
       let confirmationPresenter;
