@@ -6,6 +6,8 @@ import { readFileSync } from 'node:fs';
 const require = createRequire(import.meta.url);
 const { createToolAdapter, TOOL_NAMES } = require('../../adapter/index.js');
 const schema = JSON.parse(readFileSync(new URL('../tools.v5.json', import.meta.url), 'utf8'));
+const fixtures = JSON.parse(readFileSync(new URL('../fixtures/tool-contract.v5.json', import.meta.url), 'utf8'));
+const { validateArguments } = require('../../adapter/validation.js');
 
 function harness(options = {}) {
   const calls = [];
@@ -147,4 +149,35 @@ test('executes call arrays sequentially and returns ordered results', async () =
   const results = await adapter.executeCalls([{ name: 'get_light_status', arguments: {} }, { name: 'get_clock_time', arguments: {} }]);
   assert.deepEqual(order, ['start-read', 'end-read', 'clock']);
   assert.deepEqual(results.map((item) => item.success), [true, true]);
+});
+
+
+test('adapter validation accepts and rejects the canonical v5 contract fixtures', () => {
+  for (const fixture of fixtures.tools) {
+    assert.doesNotThrow(() => validateArguments(fixture.name, fixture.valid), fixture.name + ' valid fixture');
+    assert.throws(() => validateArguments(fixture.name, fixture.invalid), fixture.name + ' invalid fixture');
+  }
+  for (const edge of fixtures.edgeCases) {
+    const shouldPass = edge.expected.startsWith('Valid');
+    if (shouldPass) assert.doesNotThrow(() => validateArguments(edge.name, edge.arguments), edge.expected);
+    else assert.throws(() => validateArguments(edge.name, edge.arguments), edge.expected);
+  }
+});
+
+test('confirmation cancellation and stale targets never mutate logs', async () => {
+  const cancelled = harness({ confirmAction: async () => false });
+  cancelled.state.logs.yellow.push({ id: 'y1', time: '11:00' });
+  const cancelResult = await cancelled.adapter.execute('delete_log_entry', { column: 'yellow', time: '11:00' });
+  assert.equal(cancelResult.error.code, 'confirmation_cancelled');
+  assert.equal(cancelled.state.logs.yellow.length, 1);
+
+  const stale = harness({ confirmAction: async () => {
+    staleState.logs.blue[0] = { id: 'replacement', time: '08:00' };
+    return true;
+  } });
+  const staleState = stale.state;
+  staleState.logs.blue.push({ id: 'original', time: '08:00' });
+  const staleResult = await stale.adapter.execute('delete_log_entry', { column: 'blue', time: '08:00' });
+  assert.equal(staleResult.error.code, 'stale_target');
+  assert.equal(staleState.logs.blue[0].id, 'replacement');
 });
