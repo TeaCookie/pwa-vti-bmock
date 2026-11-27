@@ -24,10 +24,10 @@ function harness() {
       if (command === 'toggle yellow') state.yellow = !state.yellow;
       calls.push(command);
     },
-    createLogEntry(column, data, time = '12:00') {
+    createLogEntry(column, data, time = '09:41') {
       const entry = { id: String(++id), time, ...data };
       const existing = state.logs[column].findIndex((item) => item.time === time);
-      if (existing >= 0) state.logs[column][existing] = entry;
+      if (existing >= 0) state.logs[column][existing] = { ...state.logs[column][existing], ...entry };
       else state.logs[column].unshift(entry);
       return entry;
     },
@@ -42,7 +42,7 @@ function harness() {
   return { api: createApi(legacy, { getClockText: () => '09:41' }), state, calls };
 }
 
-test('read APIs return detached snapshots', () => {
+test('read APIs return detached snapshots with contract-shaped values', () => {
   const { api, state } = harness();
   const snapshot = api.getState();
   snapshot.blue.left = true;
@@ -50,16 +50,16 @@ test('read APIs return detached snapshots', () => {
   assert.equal(state.blue.left, false);
   assert.equal(state.logs.blue.length, 0);
   assert.deepEqual(api.getLightStatus(), { blue: { left: false, right: false }, yellow: false, red: false });
-  assert.equal(api.getClockTime(), '09:41');
+  assert.deepEqual(api.getClockTime(), { time: '09:41' });
   assert.deepEqual(api.readLogs(), { blue: [], yellow: [], red: [] });
   const history = api.getTerminalHistory();
   history[0].text = 'changed';
   assert.equal(state.terminalHistory[0].text, 'status');
 });
 
-test('setLight is idempotent for every supported light', () => {
+test('setLight is idempotent and reports previous and current state', () => {
   const { api, calls } = harness();
-  api.setLight('blue-left', true);
+  assert.deepEqual(api.setLight('blue-left', true), { light: 'blue-left', previousState: false, currentState: true });
   api.setLight('blue-left', true);
   api.setLight('blue-right', false);
   api.setLight('yellow', true);
@@ -69,43 +69,49 @@ test('setLight is idempotent for every supported light', () => {
   assert.deepEqual(calls, ['blue-left', 'toggle yellow', 'red']);
 });
 
-test('setLogEntry validates column-specific data and upserts by time', () => {
+test('setLogEntry validates exact column fields and upserts by time', () => {
   const { api, state } = harness();
-  api.setLogEntry({ column: 'blue', left: true, right: false, time: '14:30' });
-  api.setLogEntry({ column: 'blue', left: false, right: true, time: '14:30' });
+  const first = api.setLogEntry({ column: 'blue', left: true, right: false, time: '14:30' });
+  const second = api.setLogEntry({ column: 'blue', left: false, right: true, time: '14:30' });
+  assert.equal(first.action, 'created');
+  assert.equal(second.action, 'updated');
   api.setLogEntry({ column: 'yellow', on: true });
   api.setLogEntry({ column: 'red', transition: 'off-to-on' });
   assert.equal(state.logs.blue.length, 1);
   assert.deepEqual(state.logs.blue[0], { id: '2', time: '14:30', left: false, right: true });
   assert.throws(() => api.setLogEntry({ column: 'blue', left: true, right: false, time: '25:00' }), /HH:MM/);
-  assert.throws(() => api.setLogEntry({ column: 'yellow', left: false }), /boolean on/);
+  assert.throws(() => api.setLogEntry({ column: 'yellow', left: false }), /do not belong/);
+  assert.throws(() => api.setLogEntry({ column: 'red', transition: 'off-to-on', extra: 1 }), /unsupported/);
 });
 
-test('deleteLogEntry deletes by column and timestamp', () => {
+test('deleteLogEntry rejects missing and ambiguous timestamps without mutation', () => {
   const { api, state } = harness();
   api.setLogEntry({ column: 'yellow', on: true, time: '08:15' });
-  assert.equal(api.deleteLogEntry('yellow', '08:15'), true);
-  assert.equal(api.deleteLogEntry('yellow', '08:15'), false);
-  assert.equal(state.logs.yellow.length, 0);
+  assert.deepEqual(api.deleteLogEntry('yellow', '08:15'), { success: true, column: 'yellow', time: '08:15', deletedId: '1' });
+  assert.deepEqual(api.deleteLogEntry('yellow', '08:15'), { success: false, reason: 'not-found', column: 'yellow', time: '08:15' });
+  state.logs.yellow.push({ id: 'duplicate', time: '08:15', on: false });
+  assert.deepEqual(api.deleteLogEntry('yellow', '08:15'), { success: false, reason: 'ambiguous', column: 'yellow', time: '08:15' });
+  assert.equal(state.logs.yellow.length, 1);
 });
 
-test('clearLogs is scoped to one column', () => {
+test('clearLogs reports count and is scoped to one column', () => {
   const { api, state } = harness();
   api.setLogEntry({ column: 'blue', left: true, right: true });
   api.setLogEntry({ column: 'red', transition: 'on-to-off' });
-  api.clearLogs('blue');
+  assert.deepEqual(api.clearLogs('blue'), { column: 'blue', deletedCount: 1 });
   assert.equal(state.logs.blue.length, 0);
   assert.equal(state.logs.red.length, 1);
 });
 
-test('exportLogs supports empty and populated JSON and CSV output', () => {
+test('exportLogs returns normalized JSON and CSV data with counts', () => {
   const { api } = harness();
   const empty = api.exportLogs('json');
-  assert.deepEqual(JSON.parse(empty.content), { blue: [], yellow: [], red: [] });
+  assert.deepEqual(JSON.parse(empty.data), { blue: [], yellow: [], red: [] });
+  assert.deepEqual(empty.entryCounts, { blue: 0, yellow: 0, red: 0, total: 0 });
   api.setLogEntry({ column: 'red', transition: 'off-to-on', time: '11:00' });
   const csv = api.exportLogs('csv');
-  assert.match(csv.content, /"column","id","time"/);
-  assert.match(csv.content, /"red","1","11:00"/);
-  assert.equal(csv.mimeType, 'text/csv;charset=utf-8');
+  assert.match(csv.data, /"column","id","time"/);
+  assert.match(csv.data, /"red","1","11:00"/);
+  assert.equal(csv.entryCounts.total, 1);
   assert.throws(() => api.exportLogs('xml'), /json or csv/);
 });
