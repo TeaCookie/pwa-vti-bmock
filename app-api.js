@@ -39,7 +39,6 @@
       throw new TypeError('An initialized IndicatorLights API is required');
     }
     const getClockText = options.getClockText || (() => '');
-    const runCommand = options.runCommand || ((command) => legacyApi.processCommand(command));
     const getState = () => clone(legacyApi.getState());
 
     function readColumn(column) {
@@ -100,7 +99,7 @@
       const state = getState();
       const previousState = target.group ? state[target.group][target.key] : state[target.key];
       if (previousState !== desiredState) {
-        if (light === 'yellow') runCommand('toggle yellow');
+        if (light === 'yellow') legacyApi.setYellowState(desiredState);
         else legacyApi[target.toggle]();
       }
       return { light, previousState, currentState: desiredState };

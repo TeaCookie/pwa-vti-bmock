@@ -129,19 +129,14 @@
       </footer>
     </dialog>
 
+  <script src="yellow-light.js"></script>
   <script src="app.js"></script>
   <script src="app-api.js"></script>
   <script>
     if (window.IndicatorLights && window.createIndicatorLightsApi) {
       const legacyIndicatorLights = window.IndicatorLights;
       window.IndicatorLights = window.createIndicatorLightsApi(legacyIndicatorLights, {
-        getClockText: () => document.getElementById('clock')?.textContent || '',
-        runCommand: (command) => {
-          const input = document.getElementById('terminalInput');
-          const previousInput = input?.value;
-          legacyIndicatorLights.processCommand(command);
-          if (input) input.value = previousInput;
-        }
+        getClockText: () => document.getElementById('clock')?.textContent || ''
       });
     }
   </script>

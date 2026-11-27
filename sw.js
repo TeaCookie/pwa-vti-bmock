@@ -3,12 +3,14 @@
  * Provides offline support and caching
  */
 
-const CACHE_NAME = 'indicator-lights-v1';
+const CACHE_NAME = 'indicator-lights-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/styles.css',
   '/app.js',
+  '/app-api.js',
+  '/yellow-light.js',
   '/manifest.json'
 ];
 
