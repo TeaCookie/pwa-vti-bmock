@@ -104,7 +104,7 @@ test('exportLogs supports empty and populated JSON and CSV output', () => {
   assert.deepEqual(JSON.parse(empty.content), { blue: [], yellow: [], red: [] });
   api.setLogEntry({ column: 'red', transition: 'off-to-on', time: '11:00' });
   const csv = api.exportLogs('csv');
-  assert.match(csv.content, /column,id,time/);
+  assert.match(csv.content, /"column","id","time"/);
   assert.match(csv.content, /"red","1","11:00"/);
   assert.equal(csv.mimeType, 'text/csv;charset=utf-8');
   assert.throws(() => api.exportLogs('xml'), /json or csv/);
