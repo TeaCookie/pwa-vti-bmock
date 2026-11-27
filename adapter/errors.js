@@ -15,7 +15,7 @@
   }
 
   function normalizeError(error) {
-    if (error && typeof error.code === 'string' && typeof error.message === 'string') {
+    if (error instanceof AdapterError) {
       return {
         code: error.code,
         message: error.message,
