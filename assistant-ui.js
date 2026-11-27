@@ -121,8 +121,11 @@
       if (returnFocus) launcher.focus({ preventScroll: true });
     }
 
-    function setStatus(message) {
+    function setStatus(message, loading = false) {
       status.textContent = message;
+      status.classList.toggle('is-loading', loading);
+      status.setAttribute('aria-busy', String(loading));
+      output.setAttribute('aria-busy', String(loading));
     }
 
     function appendMessage(message, className) {
@@ -217,7 +220,9 @@
     root.addEventListener('resize', placeLauncher);
 
     root.addEventListener('needle:assistant-status', (event) => {
-      if (event.detail && typeof event.detail.message === 'string') setStatus(event.detail.message);
+      if (event.detail && typeof event.detail.message === 'string') {
+        setStatus(event.detail.message, event.detail.loading === true);
+      }
     });
     root.addEventListener('needle:assistant-response', (event) => {
       if (event.detail && typeof event.detail.text === 'string') {
