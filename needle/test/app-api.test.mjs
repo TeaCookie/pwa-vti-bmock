@@ -89,9 +89,10 @@ test('deleteLogEntry rejects missing and ambiguous timestamps without mutation',
   api.setLogEntry({ column: 'yellow', on: true, time: '08:15' });
   assert.deepEqual(api.deleteLogEntry('yellow', '08:15'), { success: true, column: 'yellow', time: '08:15', deletedId: '1' });
   assert.deepEqual(api.deleteLogEntry('yellow', '08:15'), { success: false, reason: 'not-found', column: 'yellow', time: '08:15' });
-  state.logs.yellow.push({ id: 'duplicate', time: '08:15', on: false });
+  state.logs.yellow.push({ id: 'duplicate-a', time: '08:15', on: false });
+  state.logs.yellow.push({ id: 'duplicate-b', time: '08:15', on: true });
   assert.deepEqual(api.deleteLogEntry('yellow', '08:15'), { success: false, reason: 'ambiguous', column: 'yellow', time: '08:15' });
-  assert.equal(state.logs.yellow.length, 1);
+  assert.equal(state.logs.yellow.length, 2);
 });
 
 test('clearLogs reports count and is scoped to one column', () => {
