@@ -154,6 +154,21 @@
   font-size: 0.73rem;
 }
 
+#needleAssistantPanel .needle-assistant-status.is-loading::before {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border: 2px solid #6c8aa9;
+  border-top-color: #80caff;
+  border-radius: 50%;
+  content: "";
+  vertical-align: -1px;
+  animation: needleAssistantSpin 800ms linear infinite;
+}
+
+@keyframes needleAssistantSpin { to { transform: rotate(360deg); } }
+
 #needleAssistantPanel .needle-assistant-error {
   margin: 0 12px 10px;
   padding: 9px 10px;
@@ -220,5 +235,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   #needleAssistantLauncher { transition: none; }
+  #needleAssistantPanel .needle-assistant-status.is-loading::before { animation: none; }
   #needleAssistantPanel, #needleAssistantPanel * { scroll-behavior: auto !important; }
 }
