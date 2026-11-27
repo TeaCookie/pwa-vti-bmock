@@ -41,8 +41,10 @@ test('expired confirmations are rejected and cannot be approved later', async ()
     onPending: (request) => { shown = request; }
   });
   const result = manager.request(operation);
+  const pendingId = shown.id;
+  const approvedOperation = shown.operation;
   await assert.rejects(result, { code: 'confirmation_expired' });
-  assert.throws(() => manager.confirm(shown.id, shown.operation), { code: 'confirmation_mismatch' });
+  assert.throws(() => manager.confirm(pendingId, approvedOperation), { code: 'confirmation_mismatch' });
 });
 
 test('a mismatched operation or confirmation identifier is rejected', async () => {
