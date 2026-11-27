@@ -12,7 +12,7 @@
     yellow: { group: null, key: 'yellow', toggle: null },
     red: { group: null, key: 'red', toggle: 'toggleRed' }
   };
-  const TIME_PATTERN = /^([01]\\d|2[0-3]):[0-5]\\d$/;
+  const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
   const LOG_FIELDS = new Set(['column', 'time', 'left', 'right', 'on', 'transition']);
 
   function clone(value) {
@@ -139,7 +139,7 @@
           rows.push([column, entry.id, entry.time, entry.left, entry.right, entry.on, entry.transition, entry.createdAt, entry.updatedAt]);
         }
       }
-      return { format, data: rows.map((row) => row.map(csvCell).join(',')).join('\\r\\n'), entryCounts };
+      return { format, data: rows.map((row) => row.map(csvCell).join(',')).join('\r\n'), entryCounts };
     }
 
     return Object.freeze({
