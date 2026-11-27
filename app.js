@@ -70,6 +70,14 @@ let yellowTimer = null;
 let clockTimer = null;
 let currentEditingEntry = null;
 
+// Shared yellow-light state/DOM/accessibility update path.
+const yellowLightController = window.createYellowLightController({
+  getState: () => state.yellow,
+  setState: (nextState) => { state.yellow = nextState; },
+  light: yellowLight,
+  updateStatus
+});
+
 // ============================================
 // UTILITY FUNCTIONS
 // ============================================
@@ -174,6 +182,13 @@ function toggleBlueHalf(side) {
   appendTerminalLine(`Blue ${side}: ${state.blue[side] ? 'ON' : 'OFF'}`, 'output');
 }
 
+/** Set yellow through the shared UI path and restart its random-toggle interval. */
+function setYellowState(isOn) {
+  yellowLightController.set(isOn);
+  appendTerminalLine(`Yellow: ${state.yellow ? 'ON' : 'OFF'}`, 'output');
+  scheduleYellowToggle();
+}
+
 /** Schedule yellow random toggle */
 function scheduleYellowToggle() {
   if (yellowTimer) clearTimeout(yellowTimer);
@@ -181,10 +196,7 @@ function scheduleYellowToggle() {
   const interval = Math.random() * 10000 + 5000;
 
   yellowTimer = setTimeout(() => {
-    state.yellow = !state.yellow;
-    yellowLight.classList.toggle('on', state.yellow);
-    yellowLight.setAttribute('aria-label', `Yellow indicator light, currently ${state.yellow ? 'ON' : 'OFF'}, toggles randomly every 5-15 seconds`);
-    updateStatus();
+    yellowLightController.toggle();
     scheduleYellowToggle();
   }, interval);
 }
@@ -775,10 +787,7 @@ function handleToggleCommand(args) {
       toggleBlueHalf('right');
       break;
     case 'yellow':
-      state.yellow = !state.yellow;
-      yellowLight.classList.toggle('on', state.yellow);
-      updateStatus();
-      appendTerminalLine(`Yellow: ${state.yellow ? 'ON' : 'OFF'}`, 'output');
+      setYellowState(!state.yellow);
       break;
     case 'red':
       toggleRed();
@@ -964,6 +973,7 @@ window.IndicatorLights = {
   toggleBlueLeft: () => toggleBlueHalf('left'),
   toggleBlueRight: () => toggleBlueHalf('right'),
   toggleRed,
+  setYellowState,
   // Log CRUD
   createLogEntry,
   readLogs,
