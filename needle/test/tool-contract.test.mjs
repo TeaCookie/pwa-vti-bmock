@@ -50,6 +50,7 @@ test('model manifest pins the Experiment 1 artifact identified by the contract',
   const manifest = load('../assets.exp1_20l.json');
   assert.equal(manifest.runtime.release, '4.0.0');
   assert.equal(manifest.model.sha256, '55021a3c9bc334c4c58e2c7131b292a8013beac4d1c1da1f1530aa47c1ef036a');
+  assert.equal(manifest.model.file, 'needle3.cact', 'runtime alias is distinct from repository artifact path');
   assert.equal(manifest.model.source, 'exp1_20l.cact');
   assert.match(manifest.model.url, /\.\.\/finetune\/models\/exp1_20l\.cact(?:\?|$)/);
   assert.equal(fixtures.contractVersion, 'needle-tools-v5');
