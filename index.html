@@ -130,6 +130,14 @@
     </dialog>
 
   <script src="app.js"></script>
+  <script src="app-api.js"></script>
+  <script>
+    if (window.IndicatorLights && window.createIndicatorLightsApi) {
+      window.IndicatorLights = window.createIndicatorLightsApi(window.IndicatorLights, {
+        getClockText: () => document.getElementById('clock')?.textContent || ''
+      });
+    }
+  </script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js')
