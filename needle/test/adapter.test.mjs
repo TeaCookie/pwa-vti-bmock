@@ -103,7 +103,6 @@ test('normalizes application exceptions without exposing stack traces', async ()
 });
 
 function createToolAdapterWithBrokenApi() {
-  const base = harness().adapter;
   const api = {
     getLightStatus() {}, getClockTime() { throw new Error('secret internal detail'); },
     readLogs() {}, getTerminalHistory() {}, setLight() {}, setLogEntry() {},
@@ -111,8 +110,6 @@ function createToolAdapterWithBrokenApi() {
   };
   return createToolAdapter({ appApi: api });
 }
-const { createToolAdapter } = require('../../adapter/index.js');
-
 test('destructive tools fail closed without an application confirmation callback', async () => {
   const { adapter, state } = harness();
   state.logs.blue.push({ id: 'a', time: '10:00' });
