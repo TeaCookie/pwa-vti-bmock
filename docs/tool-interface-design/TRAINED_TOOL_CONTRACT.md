@@ -17,7 +17,7 @@ The model emits calls; it does not define handler return values or authorize sid
 
 ## Version identity and compatibility
 
-The artifact is identified by the manifest model SHA-256 above, not merely by the mutable filename. The manifest currently references `exp1_20l.cact`; the schema passed to the model is `needle/tools.v5.json`, with training copy generated into `finetune/tools.train.json`. The existing finetuning tests assert that the generated copy matches the canonical schema.
+The artifact is identified by the manifest model SHA-256 above, not merely by the mutable filename. The manifest's `model.url` resolves to `../finetune/models/exp1_20l.cact` (with a hash query parameter), and `model.source` names `exp1_20l.cact`. Its `model.file` field is the runtime alias `needle3.cact`, not the repository path. The schema passed to the model is `needle/tools.v5.json`, with training copy generated into `finetune/tools.train.json`. The existing finetuning tests assert that the generated copy matches the canonical schema.
 
 A deployment must pin the model artifact and tool schema together. If either hash/revision changes, treat it as a new compatibility pair and rerun the contract fixtures plus model evaluations. Experiment 1 is an evaluated research artifact, not a production-readiness claim: it missed the 30 MB size gate (63 MB actual), and the hold-out contamination caveat remains. These limitations do not block implementing the tool adapter or integrating the application's tool handlers. Keep model selection/loading behind a replaceable configuration boundary; Experiment 2 may supply a different artifact later without changing the tool contract or adapter.
 
