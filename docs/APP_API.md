@@ -47,3 +47,15 @@ const result = IndicatorLights.exportLogs('json'); // default: json
 ```
 
 CSV is also supported with `exportLogs('csv')`. Export returns serialized data and counts; it does not trigger a download. Empty logs produce valid empty JSON or a header-only CSV.
+
+## Assistant adapter result limits
+
+The adapter is a separate layer over this API. It keeps the nine model tool names and their argument shapes from `needle/tools.v5.json`; these result limits do not add model-visible arguments or change the application API.
+
+- `read_logs` returns at most 100 entries per selected column. Its result includes `totalCount`, `returnedCount`, `truncated`, and `limitPerColumn`. When no column is supplied, entries are grouped under `columns`; for one column, they are under `entries`.
+- `get_terminal_history` returns the latest 100 records, with `totalCount`, `returnedCount`, `truncated`, and `limit`. Each terminal text value is capped at 2,000 characters.
+- Read projections include only the fields needed to interpret log entries and terminal history; unrelated application properties are not exposed.
+- `export_logs` remains a complete export, defaults to JSON, and accepts JSON or CSV. To keep a tool result suitable for the assistant panel, exports larger than 256 Ki characters fail with `result_too_large` rather than returning a partial export.
+- `delete_log_entry` and `clear_logs` require an application-provided confirmation callback. The adapter snapshots the target before awaiting confirmation and refuses to mutate if the target changed in the meantime.
+
+These are adapter response limits, not storage limits: the underlying application logs are not truncated or deleted by a read.
