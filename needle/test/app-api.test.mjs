@@ -49,6 +49,9 @@ test('read APIs return detached snapshots', () => {
   snapshot.logs.blue.push({ time: '01:00' });
   assert.equal(state.blue.left, false);
   assert.equal(state.logs.blue.length, 0);
+  assert.deepEqual(api.getLightStatus(), { blue: { left: false, right: false }, yellow: false, red: false });
+  assert.equal(api.getClockTime(), '09:41');
+  assert.deepEqual(api.readLogs(), { blue: [], yellow: [], red: [] });
   const history = api.getTerminalHistory();
   history[0].text = 'changed';
   assert.equal(state.terminalHistory[0].text, 'status');
@@ -102,7 +105,7 @@ test('exportLogs supports empty and populated JSON and CSV output', () => {
   api.setLogEntry({ column: 'red', transition: 'off-to-on', time: '11:00' });
   const csv = api.exportLogs('csv');
   assert.match(csv.content, /column,id,time/);
-  assert.match(csv.content, /"red","3","11:00"/);
+  assert.match(csv.content, /"red","1","11:00"/);
   assert.equal(csv.mimeType, 'text/csv;charset=utf-8');
   assert.throws(() => api.exportLogs('xml'), /json or csv/);
 });
