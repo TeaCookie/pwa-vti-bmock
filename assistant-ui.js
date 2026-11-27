@@ -50,6 +50,11 @@
     }
 
     const viewport = () => ({ width: doc.documentElement.clientWidth, height: doc.documentElement.clientHeight });
+    const safeInsets = () => {
+      const styles = root.getComputedStyle(doc.documentElement);
+      const read = (name) => Math.max(0, parseFloat(styles.getPropertyValue(name)) || 0);
+      return { top: read('--needle-safe-top'), right: read('--needle-safe-right'), bottom: read('--needle-safe-bottom'), left: read('--needle-safe-left') };
+    };
     const launcherSize = () => launcher.getBoundingClientRect().width || 56;
     let dock = 'right';
     let offset = 1;
@@ -73,9 +78,14 @@
 
     function placeLauncher() {
       const size = launcherSize();
-      const point = getDockPosition(dock, offset, viewport(), size);
-      launcher.style.left = point.x + 'px';
-      launcher.style.top = point.y + 'px';
+      const view = viewport();
+      const safe = safeInsets();
+      const point = getDockPosition(dock, offset, {
+        width: Math.max(size + EDGE_GAP * 2, view.width - safe.left - safe.right),
+        height: Math.max(size + EDGE_GAP * 2, view.height - safe.top - safe.bottom)
+      }, size);
+      launcher.style.left = (point.x + safe.left) + 'px';
+      launcher.style.top = (point.y + safe.top) + 'px';
       launcher.dataset.dock = dock;
       if (isOpen) placePanel();
     }
@@ -84,14 +94,16 @@
       if (!isOpen) return;
       const rect = launcher.getBoundingClientRect();
       const panelRect = panel.getBoundingClientRect();
+      const safe = safeInsets();
+      const view = viewport();
       const point = getPanelPosition(
-        { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+        { x: rect.left - safe.left, y: rect.top - safe.top, width: rect.width, height: rect.height },
         { width: panelRect.width || 400, height: panelRect.height || 550 },
-        viewport(),
+        { width: Math.max(1, view.width - safe.left - safe.right), height: Math.max(1, view.height - safe.top - safe.bottom) },
         dock
       );
-      panel.style.left = point.x + 'px';
-      panel.style.top = point.y + 'px';
+      panel.style.left = (point.x + safe.left) + 'px';
+      panel.style.top = (point.y + safe.top) + 'px';
     }
 
     function openPanel() {
