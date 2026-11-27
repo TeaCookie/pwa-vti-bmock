@@ -12,6 +12,7 @@
     let activeId = null;
 
     function present(request) {
+      if (!request) return clear();
       activeId = request.id;
       description.textContent = request.description;
       if (request.tool === 'delete_log_entry' && request.entry) {
