@@ -128,7 +128,9 @@
           throw new AdapterError('app_invalid_response', 'The application returned an invalid log collection.');
         }
         const matches = entries.filter((entry) => entry && entry.time === args.time);
-        if (matches.length !== 1) return appApi.deleteLogEntry(args.column, args.time);
+        if (matches.length !== 1) {
+          throw new AdapterError('stale_target', 'The requested log entry is missing or ambiguous. Nothing was deleted.');
+        }
 
         // Keep an immutable snapshot so a changed entry cannot be deleted after
         // the asynchronous confirmation prompt has been displayed.
