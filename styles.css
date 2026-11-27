@@ -864,3 +864,27 @@ footer {
     padding: 0.5rem;
   }
 }
+
+/* Destructive assistant-action confirmation */
+.confirmation-modal {
+  max-width: 480px;
+}
+
+.confirmation-description {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.confirmation-warning {
+  color: var(--red-on);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+#confirmationConfirm:focus-visible,
+#confirmationCancel:focus-visible {
+  outline: 2px solid var(--blue-left-on);
+  outline-offset: 3px;
+}
