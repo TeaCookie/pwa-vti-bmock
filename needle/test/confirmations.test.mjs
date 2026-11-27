@@ -67,10 +67,12 @@ test('session reset invalidates and rejects a pending confirmation', async () =>
   let shown;
   const manager = createConfirmationManager({ onPending: (request) => { shown = request; } });
   const result = manager.request(operation);
+  const pendingId = shown.id;
+  const approvedOperation = shown.operation;
   await Promise.resolve();
   manager.reset();
   await assert.rejects(result, { code: 'confirmation_cancelled' });
-  assert.throws(() => manager.confirm(shown.id, shown.operation), { code: 'confirmation_mismatch' });
+  assert.throws(() => manager.confirm(pendingId, approvedOperation), { code: 'confirmation_mismatch' });
 });
 
 test('delete-entry confirmation describes the exact target', async () => {
