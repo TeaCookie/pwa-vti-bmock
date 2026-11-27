@@ -55,6 +55,7 @@
       const id = 'confirmation-' + (++nextId);
       const display = Object.freeze({
         id,
+        operation: Object.freeze(clone(operation)),
         tool: operation.tool,
         column: operation.column,
         time: operation.time,
