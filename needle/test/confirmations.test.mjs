@@ -82,3 +82,43 @@ test('delete-entry confirmation describes the exact target', async () => {
   manager.confirm(shown.id, shown.operation);
   await result;
 });
+
+test('adapter does not invoke destructive handlers until the matching approval', async () => {
+  const { createToolAdapter } = require('../../adapter/index.js');
+  let shown;
+  const calls = [];
+  const logs = { blue: [{ id: 'b1', time: '08:00' }], yellow: [], red: [] };
+  const appApi = {
+    getLightStatus() {}, getClockTime() {}, getTerminalHistory() {},
+    readLogs(column) { calls.push('read:' + column); return logs[column]; },
+    setLight() {}, setLogEntry() {},
+    deleteLogEntry(column, time) {
+      calls.push('delete');
+      const index = logs[column].findIndex((entry) => entry.time === time);
+      if (index < 0) return { success: false };
+      logs[column].splice(index, 1);
+      return { success: true };
+    },
+    clearLogs(column) { calls.push('clear'); const count = logs[column].length; logs[column] = []; return { deletedCount: count }; },
+    exportLogs() {}
+  };
+  const manager = createConfirmationManager({ onPending: (request) => { shown = request; } });
+  const adapter = createToolAdapter({ appApi, confirmAction: manager.request });
+
+  const deletion = adapter.execute('delete_log_entry', { column: 'blue', time: '08:00' });
+  await Promise.resolve();
+  assert.equal(calls.includes('delete'), false);
+  assert.equal(logs.blue.length, 1);
+  manager.confirm(shown.id, shown.operation);
+  assert.equal((await deletion).success, true);
+  assert.equal(logs.blue.length, 0);
+
+  logs.yellow.push({ id: 'y1', time: '09:00' });
+  const clearing = adapter.execute('clear_logs', { column: 'yellow' });
+  await Promise.resolve();
+  assert.equal(calls.includes('clear'), false);
+  assert.equal(logs.yellow.length, 1);
+  manager.confirm(shown.id, shown.operation);
+  assert.equal((await clearing).success, true);
+  assert.equal(logs.yellow.length, 0);
+});
