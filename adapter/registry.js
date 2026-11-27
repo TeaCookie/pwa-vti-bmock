@@ -61,7 +61,7 @@
           deletedCount: before.length
         });
         const current = appApi.readLogs(args.column);
-        if (current.length !== before.length) {
+        if (JSON.stringify(current) !== JSON.stringify(before)) {
           throw new AdapterError('stale_target', 'The log column changed before confirmation completed. Nothing was cleared.');
         }
         return appApi.clearLogs(args.column);
