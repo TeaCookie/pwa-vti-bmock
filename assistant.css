@@ -1,0 +1,217 @@
+/* Floating Needle assistant. All selectors are scoped to the assistant UI. */
+#needleAssistantLauncher,
+#needleAssistantPanel,
+#needleAssistantPanel * {
+  box-sizing: border-box;
+}
+
+#needleAssistantLauncher {
+  position: fixed;
+  z-index: 1000;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(111, 194, 255, 0.55);
+  border-radius: 50%;
+  color: #f4f8ff;
+  background: linear-gradient(145deg, #1678c8, #123a70);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.42), 0 0 22px rgba(36, 160, 255, 0.2);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+#needleAssistantLauncher:active { cursor: grabbing; }
+#needleAssistantLauncher:hover { box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5), 0 0 28px rgba(36, 160, 255, 0.35); }
+#needleAssistantLauncher:focus-visible,
+#needleAssistantPanel button:focus-visible,
+#needleAssistantPanel input:focus-visible {
+  outline: 3px solid #80caff;
+  outline-offset: 3px;
+}
+
+#needleAssistantLauncher .needle-assistant-mark {
+  font: 700 1.05rem/1 system-ui, sans-serif;
+  letter-spacing: -0.06em;
+}
+
+#needleAssistantPanel {
+  position: fixed;
+  z-index: 999;
+  width: min(400px, calc(100vw - 24px));
+  height: min(550px, calc(100dvh - 24px));
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #eaf1fb;
+  background: #111b2b;
+  border: 1px solid #314762;
+  border-radius: 14px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#needleAssistantPanel[hidden] { display: none; }
+
+#needleAssistantPanel .needle-assistant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  padding: 12px 14px;
+  background: #17263a;
+  border-bottom: 1px solid #2c4059;
+}
+
+#needleAssistantPanel .needle-assistant-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+#needleAssistantPanel .needle-assistant-title {
+  margin: 0;
+  color: #f4f8ff;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+#needleAssistantPanel .needle-assistant-subtitle {
+  color: #9fb2c9;
+  font-size: 0.72rem;
+}
+
+#needleAssistantPanel .needle-assistant-close {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid #3b526d;
+  border-radius: 8px;
+  color: #eaf1fb;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+#needleAssistantPanel .needle-assistant-output {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  overscroll-behavior: contain;
+}
+
+#needleAssistantPanel .needle-assistant-empty {
+  margin: 0;
+  color: #9fb2c9;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+#needleAssistantPanel .needle-assistant-message {
+  max-width: 92%;
+  width: fit-content;
+  margin: 0 0 12px;
+  padding: 9px 11px;
+  border: 1px solid #30445d;
+  border-radius: 10px 10px 10px 3px;
+  color: #eaf1fb;
+  background: #1a2a40;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#needleAssistantPanel .needle-assistant-message.is-user {
+  margin-left: auto;
+  border-color: #28649a;
+  border-radius: 10px 10px 3px 10px;
+  background: #173d60;
+}
+
+#needleAssistantPanel .needle-assistant-message.is-assistant { margin-right: auto; }
+
+#needleAssistantPanel .needle-assistant-status {
+  min-height: 34px;
+  padding: 8px 14px;
+  color: #a9bdd4;
+  border-top: 1px solid #263b53;
+  font-size: 0.73rem;
+}
+
+#needleAssistantPanel .needle-assistant-error {
+  margin: 0 12px 10px;
+  padding: 9px 10px;
+  border: 1px solid #9e4545;
+  border-radius: 8px;
+  color: #ffdada;
+  background: #421f29;
+  font-size: 0.78rem;
+}
+
+#needleAssistantPanel .needle-assistant-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid #2c4059;
+  background: #142237;
+}
+
+#needleAssistantPanel .needle-assistant-input {
+  min-width: 0;
+  min-height: 42px;
+  max-height: 112px;
+  flex: 1;
+  padding: 10px 11px;
+  border: 1px solid #405873;
+  border-radius: 9px;
+  color: #f4f8ff;
+  background: #0d1725;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+#needleAssistantPanel .needle-assistant-input::placeholder { color: #8298b1; }
+
+#needleAssistantPanel .needle-assistant-send {
+  min-width: 66px;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid #3485c5;
+  border-radius: 9px;
+  color: white;
+  background: #176eae;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#needleAssistantPanel .needle-assistant-send:hover { background: #2084ca; }
+#needleAssistantPanel button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+@media (max-width: 520px) {
+  #needleAssistantPanel {
+    width: calc(100vw - 16px);
+    height: min(550px, calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    border-radius: 12px;
+  }
+  #needleAssistantLauncher {
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #needleAssistantLauncher { transition: none; }
+  #needleAssistantPanel, #needleAssistantPanel * { scroll-behavior: auto !important; }
+}
