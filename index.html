@@ -129,6 +129,14 @@
       </footer>
     </dialog>
 
+    <dialog id="assistantConfirmationDialog" class="log-modal confirmation-modal" aria-labelledby="confirmationTitle" aria-describedby="confirmationDescription">
+      <header class="modal-header"><h3 id="confirmationTitle">Confirm destructive action</h3></header>
+      <div class="modal-body"><p id="confirmationDescription" class="confirmation-description"></p>
+        <p class="confirmation-warning">This cannot be undone. The action will not run unless you confirm.</p></div>
+      <footer class="modal-footer"><button type="button" class="btn btn-secondary" id="confirmationCancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmationConfirm">Delete</button></footer>
+    </dialog>
+
   <script src="yellow-light.js"></script>
   <script src="app.js"></script>
   <script src="app-api.js"></script>
@@ -140,8 +148,25 @@
       });
     }
   </script>
+  <script src="adapter/errors.js"></script>
+  <script src="adapter/validation.js"></script>
+  <script src="adapter/confirmations.js"></script>
+  <script src="adapter/registry.js"></script>
+  <script src="adapter/index.js"></script>
+  <script src="adapter/confirmation-ui.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
+    if (window.IndicatorLights && window.NeedleToolAdapter && window.NeedleAdapterConfirmations) {
+      let confirmationPresenter;
+      const confirmationManager = window.NeedleAdapterConfirmations.createConfirmationManager({ onPending: (request) => confirmationPresenter.present(request) });
+      confirmationPresenter = window.NeedleConfirmationUI.createDialogPresenter(document.getElementById("assistantConfirmationDialog"), document.getElementById("confirmationDescription"), document.getElementById("confirmationConfirm"), document.getElementById("confirmationCancel"), confirmationManager);
+      window.NeedleConfirmations = confirmationManager;
+      window.NeedleToolAdapterInstance = window.NeedleToolAdapter.createToolAdapter({ appApi: window.IndicatorLights, confirmAction: confirmationManager.request });
+      window.addEventListener("needle:session-reset", () => confirmationManager.reset());
+      window.addEventListener("pagehide", () => confirmationManager.reset(), { once: true });
+    }
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register('sw.js')
         .then(reg => console.log('SW registered:', reg.scope))
         .catch(err => console.log('SW registration failed:', err));
