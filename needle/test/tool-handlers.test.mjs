@@ -173,6 +173,7 @@ test('log and terminal reads are bounded and disclose truncation', async () => {
   for (let i = 0; i < LIMITS.maxLogEntriesPerColumn + 5; i++) {
     state.logs.blue.push({ id: String(i), time: '09:30', left: true, right: false, privateField: 'not exposed' });
   }
+  state.terminalHistory = [];
   for (let i = 0; i < LIMITS.maxTerminalEntries + 5; i++) {
     state.terminalHistory.push({ text: 'x'.repeat(LIMITS.maxTerminalTextLength + 10), type: 'command', time: i, privateField: 'not exposed' });
   }
