@@ -149,6 +149,7 @@
       const dy = event.clientY - drag.startY;
       if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
       drag.moved = true;
+      launcher.dataset.dragging = 'true';
       launcher.style.left = clamp(drag.originX + dx, EDGE_GAP, viewport().width - launcherSize() - EDGE_GAP) + 'px';
       launcher.style.top = clamp(drag.originY + dy, EDGE_GAP, viewport().height - launcherSize() - EDGE_GAP) + 'px';
       if (isOpen) placePanel();
@@ -174,6 +175,7 @@
         saveDock();
         suppressClick = true;
       }
+      delete launcher.dataset.dragging;
       drag = null;
     }
 
