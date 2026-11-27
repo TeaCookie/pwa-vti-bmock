@@ -8,6 +8,19 @@
   const { AdapterError } = typeof module !== 'undefined' && module.exports
     ? require('./errors.js') : self.NeedleAdapterErrors;
 
+  async function requireConfirmation(confirmAction, request) {
+    if (typeof confirmAction !== 'function') {
+      throw new AdapterError(
+        'confirmation_required',
+        'This action requires explicit confirmation in the application.'
+      );
+    }
+    const approved = await confirmAction(Object.freeze({ ...request }));
+    if (approved !== true) {
+      throw new AdapterError('confirmation_cancelled', 'The action was cancelled. No changes were made.');
+    }
+  }
+
   const DEFAULT_TTL_MS = 60_000;
 
   function clone(value) {
@@ -109,5 +122,5 @@
     return Object.freeze({ request, confirm, cancel, reset, getPending });
   }
 
-  return Object.freeze({ createConfirmationManager, describeAction });
+  return Object.freeze({ requireConfirmation, createConfirmationManager, describeAction });
 });
