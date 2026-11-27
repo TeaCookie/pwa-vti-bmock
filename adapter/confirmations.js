@@ -45,6 +45,7 @@
       const current = pending;
       pending = null;
       clearTimeout(current.timer);
+      try { onPending(null); } catch { /* UI cleanup must not affect the operation result. */ }
       if (error) current.reject(error);
       else current.resolve(true);
     }
