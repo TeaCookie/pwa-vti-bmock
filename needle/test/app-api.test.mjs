@@ -20,10 +20,8 @@ function harness() {
     toggleBlueLeft() { state.blue.left = !state.blue.left; calls.push('blue-left'); },
     toggleBlueRight() { state.blue.right = !state.blue.right; calls.push('blue-right'); },
     toggleRed() { state.red = !state.red; calls.push('red'); },
-    processCommand(command) {
-      if (command === 'toggle yellow') state.yellow = !state.yellow;
-      calls.push(command);
-    },
+    setYellowState(desiredState) { state.yellow = desiredState; calls.push('yellow'); },
+    processCommand(command) { calls.push(command); },
     createLogEntry(column, data, time = '09:41') {
       const entry = { id: String(++id), time, ...data };
       const existing = state.logs[column].findIndex((item) => item.time === time);
@@ -66,7 +64,7 @@ test('setLight is idempotent and reports previous and current state', () => {
   api.setLight('yellow', true);
   api.setLight('red', true);
   api.setLight('red', true);
-  assert.deepEqual(calls, ['blue-left', 'toggle yellow', 'red']);
+  assert.deepEqual(calls, ['blue-left', 'yellow', 'red']);
 });
 
 test('setLogEntry validates exact column fields and upserts by time', () => {
