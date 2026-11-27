@@ -1,3 +1,5 @@
+> **Scope correction (2026-11-26):** This is an earlier 12-tool proposal, not the current model contract. The first adapter baseline must follow [TRAINED_TOOL_CONTRACT.md](./TRAINED_TOOL_CONTRACT.md) and expose only the nine tools in `needle/tools.v5.json`. In particular, do not implement `create_log_entry`, `update_log_entry`, `set_yellow_timing`, or `import_logs` as model tools. Adapter and application tool integration can proceed independently of Experiment 2. Keep the model artifact configurable so Experiment 2 can replace it without redesigning the adapter.
+
 # Implementation Plan - Tool Interface for Indicator Lights PWA
 
 **Version**: 1.0.0  

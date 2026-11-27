@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **App**: complete and stable. Changes here are normal feature or bug work.
 - **Model experiment**: in progress. Experiment 1 (fine-tuned 20-layer model) cleared the accuracy, off-topic and latency gates but missed the size gate (63 MB vs 30 MB), and its hold-out score may be inflated because the hold-out is not sealed. Experiment 2 (retrain at 10 epochs, depth ladder, sealed hold-out) is planned. Numbers and caveats are in `README.md` and `finetune/README.md`.
-- **Treat the fine-tuned model as a research result, not a shipped feature.** Do not describe it as production-ready in docs, commits or PRs, and do not wire it into the app, until experiment 2 has reported.
+- **Keep model evaluation separate from application integration.** Experiment 2 is intended to improve or replace the model artifact; it is not a prerequisite for implementing the tool adapter, application handlers, UI confirmation, or their tests. Keep model loading/configuration replaceable so a later artifact can be swapped without redesigning the integration. Do not describe Experiment 1 as production-ready: it missed the 30 MB size gate (63 MB actual), and its hold-out score has a contamination caveat.
 - **No build system and no `package.json`.** There is a Node test suite (see Commands) but no test framework dependency.
 
 ## Project Structure

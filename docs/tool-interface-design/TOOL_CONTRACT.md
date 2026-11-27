@@ -1,3 +1,5 @@
+> **Compatibility notice (2026-11-26):** This document is the broader application capability contract (12 proposed tools), not the model-facing contract for the first adapter. The current fine-tuned model schema is `needle/tools.v5.json` (nine tools). For the exact trained arguments, adapter result expectations, mismatch resolutions, and confirmation policy, see [TRAINED_TOOL_CONTRACT.md](./TRAINED_TOOL_CONTRACT.md). Do not expose the four broader-only operations or add confirmation fields to the model schema. The trained v5 schema is authoritative for the first implementation.
+
 # Tool Contract - Indicator Lights PWA
 
 **Version**: 1.0.0  
