@@ -161,6 +161,7 @@
       confirmationPresenter = window.NeedleConfirmationUI.createDialogPresenter(document.getElementById("assistantConfirmationDialog"), document.getElementById("confirmationDescription"), document.getElementById("confirmationConfirm"), document.getElementById("confirmationCancel"), confirmationManager);
       window.NeedleConfirmations = confirmationManager;
       window.NeedleToolAdapterInstance = window.NeedleToolAdapter.createToolAdapter({ appApi: window.IndicatorLights, confirmAction: confirmationManager.request });
+      window.addEventListener("needle:session-reset", () => confirmationManager.reset());
       window.addEventListener("pagehide", () => confirmationManager.reset(), { once: true });
     }
   </script>
