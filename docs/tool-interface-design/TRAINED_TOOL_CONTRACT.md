@@ -1,6 +1,6 @@
 # Trained Needle Tool Contract (v5)
 
-**Status:** Contract baseline for the first adapter implementation. This document does not authorize shipping or loading the fine-tuned model.
+**Status:** Contract baseline for the first adapter implementation. Adapter and application integration may proceed independently of Experiment 2; model evaluation and production-readiness decisions remain separate.
 **Contract version:** `needle-tools-v5`
 **Schema source:** `needle/tools.v5.json`
 **Generated training schema:** `finetune/tools.train.json`
@@ -19,7 +19,7 @@ The model emits calls; it does not define handler return values or authorize sid
 
 The artifact is identified by the manifest model SHA-256 above, not merely by the mutable filename. The manifest currently references `exp1_20l.cact`; the schema passed to the model is `needle/tools.v5.json`, with training copy generated into `finetune/tools.train.json`. The existing finetuning tests assert that the generated copy matches the canonical schema.
 
-A deployment must pin the model artifact and tool schema together. If either hash/revision changes, treat it as a new compatibility pair and rerun the contract fixtures plus model evaluations. Experiment 1 is not production-ready: it missed the 30 MB size gate (63 MB actual), and the hold-out contamination caveat remains. Follow `CLAUDE.md`; do not wire this model into `app.js` or the shipped PWA until Experiment 2 has reported.
+A deployment must pin the model artifact and tool schema together. If either hash/revision changes, treat it as a new compatibility pair and rerun the contract fixtures plus model evaluations. Experiment 1 is an evaluated research artifact, not a production-readiness claim: it missed the 30 MB size gate (63 MB actual), and the hold-out contamination caveat remains. These limitations do not block implementing the tool adapter or integrating the application's tool handlers. Keep model selection/loading behind a replaceable configuration boundary; Experiment 2 may supply a different artifact later without changing the tool contract or adapter.
 
 ## Shared argument rules
 
