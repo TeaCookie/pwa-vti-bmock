@@ -1,4 +1,10 @@
 /* Floating Needle assistant. All selectors are scoped to the assistant UI. */
+:root {
+  --needle-safe-top: env(safe-area-inset-top, 0px);
+  --needle-safe-right: env(safe-area-inset-right, 0px);
+  --needle-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --needle-safe-left: env(safe-area-inset-left, 0px);
+}
 #needleAssistantLauncher,
 #needleAssistantPanel,
 #needleAssistantPanel * {
