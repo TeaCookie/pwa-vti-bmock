@@ -4,7 +4,7 @@
   const STORAGE_KEY = 'needle-assistant-dock-v1';
   const EDGE_GAP = 12;
   const DRAG_THRESHOLD = 8;
-  const TOOL_EXAMPLES_URL = './needle/tool-examples.v5.jsonl';
+  const TOOL_EXAMPLES_URL = './needle/tool-examples.v5.jsonl?v=10';
 
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
