@@ -3,7 +3,7 @@
  * Provides offline support and caching
  */
 
-const CACHE_NAME = 'indicator-lights-v9';
+const CACHE_NAME = 'indicator-lights-v10';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -17,10 +17,10 @@ const ASSETS_TO_CACHE = [
   '/adapter/registry.js',
   '/adapter/index.js',
   '/adapter/confirmation-ui.js',
-  '/assistant.css',
-  '/assistant-ui.js',
+  '/assistant.css?v=10',
+  '/assistant-ui.js?v=10',
   '/assistant-controller.js',
-  '/needle/tool-examples.v5.jsonl',
+  '/needle/tool-examples.v5.jsonl?v=10',
   '/manifest.json'
 ];
 

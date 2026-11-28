@@ -16,3 +16,11 @@ test('log modal form closes before its dialog', () => {
   assert.notEqual(formStart, -1, 'log modal form opens');
   assert.ok(formEnd > formStart, 'log modal form closes before the dialog');
 });
+
+
+test('assistant assets use explicit cache-busting versions', () => {
+  assert.match(html, /href="assistant\.css\?v=10"/);
+  assert.match(html, /src="assistant-ui\.js\?v=10"/);
+  assert.match(html, /id="needleAssistantToolsToggle"/);
+  assert.match(html, /id="needleAssistantToolsList"/);
+});
