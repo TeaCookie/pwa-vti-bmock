@@ -238,6 +238,12 @@
     });
  
     const toolResults = doc.getElementById('needleAssistantToolResults');
+    root.addEventListener('needle:assistant-submit', () => {
+      if (!toolResults) return;
+      toolResults.replaceChildren();
+      toolRows.clear();
+      toolResults.hidden = true;
+    });
     const toolRows = new Map();
     function toolRow(index, total, tool) {
       if (!toolResults) return null;

@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { createAssistantController } = require('../../assistant-controller.js');
+const { createToolAdapter } = require('../../adapter/index.js');
 
 class FakeRoot extends EventTarget {
   constructor() {
@@ -137,5 +138,46 @@ test('unknown and malformed individual calls are delegated unchanged to the allo
   await controller.getQueue();
   assert.equal(received, null);
   assert.deepEqual(root.details('needle:assistant-tool-result').map((x) => x.state), ['failed', 'failed']);
+  controller.dispose();
+});
+
+test('end-to-end red-light request reaches the application API through the adapter allowlist', async () => {
+  const root = new FakeRoot();
+  const state = { red: false };
+  const appApi = {
+    getLightStatus: () => ({ red: state.red, blue: { left: false, right: false }, yellow: false }),
+    getClockTime: () => ({ time: '10:00' }),
+    readLogs: () => [],
+    getTerminalHistory: () => [],
+    setLight: (light, value) => {
+      assert.equal(light, 'red');
+      const previousState = state.red;
+      state.red = value;
+      return { light, previousState, currentState: value };
+    },
+    setLogEntry: () => ({ entry: {}, action: 'created' }),
+    deleteLogEntry: () => ({ success: true }),
+    clearLogs: () => ({ deletedCount: 0 }),
+    exportLogs: () => ({ format: 'json', data: '{}', entryCounts: { blue: 0, yellow: 0, red: 0, total: 0 } })
+  };
+  const adapter = createToolAdapter({ appApi });
+  class Client {
+    constructor() { this.worker = null; }
+    init() { this.worker = {}; return Promise.resolve(); }
+    complete(prompt) {
+      assert.equal(prompt, 'turn the red light on');
+      return Promise.resolve({
+        raw: 'original model output',
+        calls: [{ name: 'toggle_light', arguments: { light: 'red', state: true } }]
+      });
+    }
+    terminate() {}
+  }
+  const controller = createAssistantController({ root, Client, adapter });
+  root.emit('needle:assistant-submit', { text: 'turn the red light on' });
+  await controller.getQueue();
+  assert.equal(state.red, true);
+  assert.equal(root.details('needle:assistant-response')[0].text, 'original model output');
+  assert.equal(root.details('needle:assistant-tool-result')[0].state, 'succeeded');
   controller.dispose();
 });
