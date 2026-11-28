@@ -5,10 +5,10 @@ import { readFile } from 'node:fs/promises';
 const source = await readFile(new URL('../../sw.js', import.meta.url), 'utf8');
 
 test('service worker versions the app shell and caches assistant UI and adapter assets', () => {
-  assert.match(source, /CACHE_NAME\s*=\s*['"]indicator-lights-v9['"]/);
+  assert.match(source, /CACHE_NAME\s*=\s*['"]indicator-lights-v10['"]/);
   for (const asset of [
-    '/index.html', '/assistant.css', '/assistant-ui.js', '/assistant-controller.js',
-    '/adapter/validation.js', '/adapter/index.js', '/app-api.js', '/needle/tool-examples.v5.jsonl'
+    '/index.html', '/assistant.css?v=10', '/assistant-ui.js?v=10', '/assistant-controller.js',
+    '/adapter/validation.js', '/adapter/index.js', '/app-api.js', '/needle/tool-examples.v5.jsonl?v=10'
   ]) assert.ok(source.includes("'" + asset + "'"), asset);
 });
 
