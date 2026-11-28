@@ -4,7 +4,7 @@
   if (root) root.NeedleAssistantController = api;
   if (root && root.document) {
     const initialize = () => {
-      if (!root.NeedleClient || !root.NeedleAssistantUIInstance) return;
+      if (root.NeedleAssistantControllerInstance || !root.NeedleClient || !root.NeedleAssistantUIInstance) return;
       root.NeedleAssistantControllerInstance = api.createAssistantController({
         root, Client: root.NeedleClient, adapter: root.NeedleToolAdapterInstance
       });
