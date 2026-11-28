@@ -4,6 +4,7 @@
   const STORAGE_KEY = 'needle-assistant-dock-v1';
   const EDGE_GAP = 12;
   const DRAG_THRESHOLD = 8;
+  const TOOL_EXAMPLES_URL = './needle/tool-examples.v5.jsonl';
 
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
@@ -97,6 +98,16 @@
     });
   }
 
+  function parseToolExamples(source) {
+    return String(source).split('\n').filter((line) => line.trim()).map((line) => {
+      const example = JSON.parse(line);
+      if (!example || !Array.isArray(example.tools) || !Array.isArray(example.answers) || !example.answers[0] || typeof example.answers[0].name !== 'string') {
+        throw new TypeError('A tool example is missing its training fields.');
+      }
+      return { name: example.answers[0].name, line, example };
+    });
+  }
+
   function createAssistantUI(doc) {
     const launcher = doc.getElementById('needleAssistantLauncher');
     const panel = doc.getElementById('needleAssistantPanel');
@@ -107,6 +118,8 @@
     const error = doc.getElementById('needleAssistantError');
     const closeButton = doc.getElementById('needleAssistantClose');
     const micButton = doc.getElementById('needleAssistantMic');
+    const toolsToggle = doc.getElementById('needleAssistantToolsToggle');
+    const toolsList = doc.getElementById('needleAssistantToolsList');
 
     if (!launcher || !panel || !form || !input || !output || !status || !error || !closeButton) {
       return null;
@@ -295,6 +308,51 @@
       speech.start();
     });
     closeButton.addEventListener('click', () => closePanel());
+    if (toolsToggle && toolsList) {
+      let examplesPromise = null;
+      toolsToggle.addEventListener('click', async () => {
+        const opening = toolsList.hidden;
+        toolsList.hidden = !opening;
+        toolsToggle.setAttribute('aria-expanded', String(opening));
+        if (!opening || toolsList.dataset.loaded === 'true') return;
+        toolsList.replaceChildren();
+        const loading = doc.createElement('p');
+        loading.className = 'needle-assistant-tools-loading';
+        loading.textContent = 'Loading tool examples…';
+        toolsList.appendChild(loading);
+        try {
+          if (!examplesPromise) {
+            examplesPromise = root.fetch(new URL(TOOL_EXAMPLES_URL, root.location.href))
+              .then((response) => {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.text();
+              })
+              .then(parseToolExamples)
+              .catch((error) => { examplesPromise = null; throw error; });
+          }
+          const examples = await examplesPromise;
+          if (toolsList.hidden) return;
+          toolsList.replaceChildren();
+          for (const item of examples) {
+            const entry = doc.createElement('details');
+            entry.className = 'needle-assistant-tool-example';
+            const summary = doc.createElement('summary');
+            summary.textContent = item.name;
+            const code = doc.createElement('pre');
+            code.textContent = item.line;
+            entry.append(summary, code);
+            toolsList.appendChild(entry);
+          }
+          toolsList.dataset.loaded = 'true';
+        } catch {
+          toolsList.replaceChildren();
+          const failure = doc.createElement('p');
+          failure.className = 'needle-assistant-tools-error';
+          failure.textContent = 'Could not load tool examples. Check the connection and try again.';
+          toolsList.appendChild(failure);
+        }
+      });
+    }
     doc.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && isOpen) closePanel();
     });
@@ -376,7 +434,7 @@
     return Object.freeze({ open: openPanel, close: closePanel, reposition: placeLauncher });
   }
 
-  const api = Object.freeze({ clamp, getDockPosition, getPanelPosition, createSpeechInput, createAssistantUI });
+  const api = Object.freeze({ clamp, getDockPosition, getPanelPosition, createSpeechInput, parseToolExamples, createAssistantUI });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) root.NeedleAssistantUI = api;
   if (root && root.document) {

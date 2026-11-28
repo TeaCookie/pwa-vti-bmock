@@ -3,7 +3,7 @@
  * Provides offline support and caching
  */
 
-const CACHE_NAME = 'indicator-lights-v8';
+const CACHE_NAME = 'indicator-lights-v9';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -20,6 +20,7 @@ const ASSETS_TO_CACHE = [
   '/assistant.css',
   '/assistant-ui.js',
   '/assistant-controller.js',
+  '/needle/tool-examples.v5.jsonl',
   '/manifest.json'
 ];
 
@@ -63,7 +64,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   // The Needle test page and worker manage their own caching (see needle/README.md)
-  if (new URL(event.request.url).pathname.startsWith('/needle/')) {
+  const requestPath = new URL(event.request.url).pathname;
+  if (requestPath.startsWith('/needle/') && requestPath !== '/needle/tool-examples.v5.jsonl') {
     return;
   }
 

@@ -288,3 +288,64 @@
   border-top: 1px solid #263b53;
   font-weight: 650;
 }
+
+
+#needleAssistantPanel .needle-assistant-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#needleAssistantPanel .needle-assistant-tools-toggle {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #3b526d;
+  border-radius: 8px;
+  color: #d8e8fa;
+  background: #20344d;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+#needleAssistantPanel .needle-assistant-tools-toggle[aria-expanded='true'] {
+  border-color: #5595c9;
+  background: #244767;
+}
+#needleAssistantPanel .needle-assistant-tools-list {
+  flex: 0 1 auto;
+  max-height: 42%;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 12px;
+  border-bottom: 1px solid #2c4059;
+  background: #0d1725;
+}
+#needleAssistantPanel .needle-assistant-tools-list[hidden] { display: none; }
+#needleAssistantPanel .needle-assistant-tool-example {
+  margin: 0 0 6px;
+  color: #d8e8fa;
+  font-size: 0.76rem;
+}
+#needleAssistantPanel .needle-assistant-tool-example summary {
+  padding: 5px 2px;
+  cursor: pointer;
+  font-weight: 650;
+}
+#needleAssistantPanel .needle-assistant-tool-example pre {
+  max-height: 180px;
+  overflow: auto;
+  margin: 4px 0 8px;
+  padding: 8px;
+  border: 1px solid #263b53;
+  border-radius: 6px;
+  color: #c4d5e8;
+  background: #111f30;
+  font: 0.65rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre;
+}
+#needleAssistantPanel .needle-assistant-tools-loading,
+#needleAssistantPanel .needle-assistant-tools-error {
+  margin: 4px 0;
+  color: #9fb2c9;
+  font-size: 0.75rem;
+}
+#needleAssistantPanel .needle-assistant-tools-error { color: #ffb6b6; }

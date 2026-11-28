@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const assistant = require('../../assistant-ui.js');
+const toolExamples = readFileSync(new URL('../tool-examples.v5.jsonl', import.meta.url), 'utf8');
+const loadedTools = JSON.parse(readFileSync(new URL('../tools.v5.json', import.meta.url), 'utf8'));
 
 test('launcher docks to the left, right, and bottom within viewport bounds', () => {
   const viewport = { width: 900, height: 700 };
@@ -57,4 +60,24 @@ test('clamp handles values below, within, and above a range', () => {
   assert.equal(assistant.clamp(-1, 0, 10), 0);
   assert.equal(assistant.clamp(5, 0, 10), 5);
   assert.equal(assistant.clamp(11, 0, 10), 10);
+});
+
+test('tool examples are valid training JSONL with exactly one example per loaded tool', () => {
+  const examples = assistant.parseToolExamples(toolExamples);
+  assert.deepEqual(examples.map((item) => item.name), loadedTools.map((tool) => tool.name));
+  assert.equal(new Set(examples.map((item) => item.name)).size, loadedTools.length);
+  for (const item of examples) {
+    assert.ok(item.example.query.length > 0, item.name + ' query');
+    assert.deepEqual(item.example.tools, loadedTools, item.name + ' tool schema');
+    assert.equal(item.example.answers.length, 1, item.name + ' has one answer');
+    assert.equal(item.example.answers[0].name, item.name);
+    assert.equal(typeof item.example.reasoning, 'string');
+    assert.ok(item.example.reasoning.length > 10, item.name + ' reasoning');
+    assert.equal(JSON.parse(item.line).answers[0].name, item.name);
+  }
+});
+
+test('tool example parser rejects records that are not training examples', () => {
+  assert.throws(() => assistant.parseToolExamples('not json'), SyntaxError);
+  assert.throws(() => assistant.parseToolExamples(JSON.stringify({ query: 'test', answers: [] })), /training fields/);
 });
