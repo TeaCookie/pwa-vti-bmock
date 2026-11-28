@@ -178,6 +178,15 @@
   <script src="adapter/index.js"></script>
   <script src="adapter/confirmation-ui.js"></script>
   <script src="assistant-ui.js"></script>
+  <script src="assistant-controller.js"></script>
+  <script type="module">
+    import { NeedleClient } from './needle/needle-client.js';
+    window.NeedleClient = NeedleClient;
+    window.NeedleAssistantControllerInstance = window.NeedleAssistantController.createAssistantController({
+      root: window,
+      Client: NeedleClient
+    });
+  </script>
   <script>
     if (window.IndicatorLights && window.NeedleToolAdapter && window.NeedleAdapterConfirmations) {
       let confirmationPresenter;
