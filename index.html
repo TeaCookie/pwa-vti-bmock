@@ -152,6 +152,7 @@
       <div class="needle-assistant-output" id="needleAssistantOutput" role="log" aria-live="polite" aria-relevant="additions text">
         <p class="needle-assistant-empty">Ask the assistant about your indicator lights and logs.</p>
       </div>
+      <section class="needle-assistant-tool-results" id="needleAssistantToolResults" aria-label="Tool execution results" hidden></section>
       <div class="needle-assistant-status" id="needleAssistantStatus" role="status" aria-live="polite">Ready</div>
       <p class="needle-assistant-error" id="needleAssistantError" role="alert" hidden></p>
       <form class="needle-assistant-form" id="needleAssistantForm">
@@ -184,13 +185,17 @@
     window.NeedleClient = NeedleClient;
     window.NeedleAssistantControllerInstance = window.NeedleAssistantController.createAssistantController({
       root: window,
-      Client: NeedleClient
+      Client: NeedleClient,
+      adapter: window.NeedleToolAdapterInstance
     });
   </script>
   <script>
     if (window.IndicatorLights && window.NeedleToolAdapter && window.NeedleAdapterConfirmations) {
       let confirmationPresenter;
-      const confirmationManager = window.NeedleAdapterConfirmations.createConfirmationManager({ onPending: (request) => confirmationPresenter.present(request) });
+      const confirmationManager = window.NeedleAdapterConfirmations.createConfirmationManager({ onPending: (request) => {
+        confirmationPresenter.present(request);
+        window.dispatchEvent(new CustomEvent("needle:assistant-confirmation", { detail: { request } }));
+      } });
       confirmationPresenter = window.NeedleConfirmationUI.createDialogPresenter(document.getElementById("assistantConfirmationDialog"), document.getElementById("confirmationDescription"), document.getElementById("confirmationConfirm"), document.getElementById("confirmationCancel"), confirmationManager);
       window.NeedleConfirmations = confirmationManager;
       window.NeedleToolAdapterInstance = window.NeedleToolAdapter.createToolAdapter({ appApi: window.IndicatorLights, confirmAction: confirmationManager.request });

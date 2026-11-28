@@ -236,6 +236,59 @@
       error.hidden = false;
       setStatus('Something went wrong');
     });
+ 
+    const toolResults = doc.getElementById('needleAssistantToolResults');
+    root.addEventListener('needle:assistant-submit', () => {
+      if (!toolResults) return;
+      toolResults.replaceChildren();
+      toolRows.clear();
+      toolResults.hidden = true;
+    });
+    const toolRows = new Map();
+    function toolRow(index, total, tool) {
+      if (!toolResults) return null;
+      let row = toolRows.get(index);
+      if (!row) {
+        row = doc.createElement('p');
+        row.className = 'needle-assistant-tool-result';
+        toolResults.appendChild(row);
+        toolRows.set(index, row);
+      }
+      toolResults.hidden = false;
+      row.textContent = (index + 1) + '/' + total + ' · ' + (tool || 'Invalid tool call');
+      return row;
+    }
+    root.addEventListener('needle:assistant-tool-state', (event) => {
+      const detail = event.detail || {};
+      const row = toolRow(detail.index, detail.total, detail.tool);
+      if (!row) return;
+      const labels = { running: 'Running', awaiting_confirmation: 'Awaiting your confirmation' };
+      row.textContent += ' — ' + (labels[detail.state] || detail.state || 'Working');
+      if (detail.message) row.textContent += ': ' + detail.message;
+      row.dataset.state = detail.state || '';
+    });
+    root.addEventListener('needle:assistant-tool-result', (event) => {
+      const detail = event.detail || {};
+      const row = toolRow(detail.index, detail.total, detail.tool);
+      if (!row) return;
+      const result = detail.result || {};
+      if (detail.state === 'succeeded' && result.result !== undefined) {
+        row.textContent += ' — Succeeded: ' + JSON.stringify(result.result);
+      } else {
+        const failure = result.error || {};
+        row.textContent += ' — Failed (' + (failure.code || 'unknown') + '): ' + (failure.message || 'No result returned.');
+      }
+      row.dataset.state = detail.state || 'failed';
+    });
+    root.addEventListener('needle:assistant-tool-summary', (event) => {
+      const detail = event.detail || {};
+      if (!toolResults || !detail.total) return;
+      const summary = doc.createElement('p');
+      summary.className = 'needle-assistant-tool-summary';
+      summary.textContent = 'Tools: ' + detail.succeeded + ' succeeded, ' + detail.failed + ' failed (' + detail.total + ' total)';
+      toolResults.appendChild(summary);
+      toolResults.hidden = false;
+    });
 
     restoreDock();
     placeLauncher();
