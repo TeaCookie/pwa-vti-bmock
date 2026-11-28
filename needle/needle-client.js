@@ -24,26 +24,46 @@ export class NeedleClient {
     this.initWaiter = null;
   }
 
-  async init() {
+  init() {
     if (this.initWaiter) return this.initWaiter.promise;
+    const waiter = {};
+    waiter.promise = new Promise((resolve, reject) => {
+      waiter.resolve = resolve;
+      waiter.reject = reject;
+    });
+    this.initWaiter = waiter;
+    this._initialize(waiter).catch((error) => {
+      if (this.initWaiter === waiter) this.initWaiter = null;
+      if (this.worker) {
+        this.worker.terminate();
+        this.worker = null;
+      }
+      waiter.reject(error);
+    });
+    return waiter.promise;
+  }
+
+  async _initialize(waiter) {
     const toolsResponse = await fetch(this.toolsUrl);
     if (!toolsResponse.ok) throw this._error('asset-fetch', this.toolsUrl + ': HTTP ' + toolsResponse.status);
     const tools = await toolsResponse.json();
 
-    // Absolute URL: the worker resolves it itself, and the page's service worker is not involved.
     const manifestUrl = new URL(this.manifestUrl, location.href).href;
-
-    this.worker = new Worker(this.workerUrl); // classic worker on purpose (importScripts)
-    this.worker.onmessage = (e) => this._onMessage(e.data);
-    this.worker.onerror = (e) => this._failAll(this._error('model-load', e.message || 'worker error'));
-
-    this.initWaiter = {};
-    this.initWaiter.promise = new Promise((resolve, reject) => {
-      this.initWaiter.resolve = resolve;
-      this.initWaiter.reject = reject;
-    });
-    this.worker.postMessage({ type: 'init', manifestUrl, tools });
-    return this.initWaiter.promise;
+    const worker = new Worker(this.workerUrl);
+    this.worker = worker;
+    worker.onmessage = (e) => this._onMessage(e.data);
+    const failWorker = (message) => {
+      const error = this._error('model-load', message || 'worker error');
+      this._failAll(error);
+      if (this.worker === worker) {
+        worker.terminate();
+        this.worker = null;
+        this.initWaiter = null;
+      }
+    };
+    worker.onerror = (e) => failWorker(e.message || 'worker error');
+    worker.onmessageerror = () => failWorker('worker message could not be deserialized');
+    worker.postMessage({ type: 'init', manifestUrl, tools });
   }
 
   complete(text, opts = {}) {
@@ -72,7 +92,11 @@ export class NeedleClient {
         this.onProgress(m);
         break;
       case 'ready':
-        if (this.initWaiter) this.initWaiter.resolve(m);
+        if (this.initWaiter) {
+          const waiter = this.initWaiter;
+          this.initWaiter = null;
+          waiter.resolve(m);
+        }
         break;
       case 'result': {
         const p = this.pending.get(m.id);
@@ -86,7 +110,15 @@ export class NeedleClient {
         const err = this._error(m.code, m.message);
         err.raw = m.raw;
         if (m.id === undefined || m.id === null) {
-          if (this.initWaiter) this.initWaiter.reject(err);
+          if (this.initWaiter) {
+            const waiter = this.initWaiter;
+            this.initWaiter = null;
+            waiter.reject(err);
+          }
+          if (this.worker) {
+            this.worker.terminate();
+            this.worker = null;
+          }
           return;
         }
         const p = this.pending.get(m.id);
@@ -100,7 +132,11 @@ export class NeedleClient {
   }
 
   _failAll(err) {
-    if (this.initWaiter && this.initWaiter.reject) this.initWaiter.reject(err);
+    if (this.initWaiter && this.initWaiter.reject) {
+      const waiter = this.initWaiter;
+      this.initWaiter = null;
+      waiter.reject(err);
+    }
     for (const p of this.pending.values()) { clearTimeout(p.timer); p.reject(err); }
     this.pending.clear();
   }
