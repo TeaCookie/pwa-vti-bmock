@@ -26,7 +26,8 @@ test('service worker fetches navigations from the network before falling back to
 test('service worker does not precache large model or runtime assets', () => {
   const precache = source.slice(source.indexOf('const ASSETS_TO_CACHE'), source.indexOf('// Install event'));
   assert.doesNotMatch(precache, /needle\.cact|\.safetensors|wasm|model\.bin|exp1_20l/);
-  assert.match(source, /requestPath\.startsWith\('\/needle\/'\)/);\n  assert.match(source, /requestPath !== '\/needle\/tool-examples\.v5\.jsonl'/);
+  assert.match(source, /requestPath\.startsWith\('\/needle\/'\)/);
+  assert.match(source, /requestPath !== '\/needle\/tool-examples\.v5\.jsonl'/);
 });
 
 test('service worker removes previous cache versions during activation', () => {
