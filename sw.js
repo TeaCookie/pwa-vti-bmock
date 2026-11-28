@@ -3,7 +3,7 @@
  * Provides offline support and caching
  */
 
-const CACHE_NAME = 'indicator-lights-v6';
+const CACHE_NAME = 'indicator-lights-v7';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
