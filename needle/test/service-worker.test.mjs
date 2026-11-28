@@ -20,7 +20,7 @@ test('service worker fetches navigations from the network before falling back to
   assert.match(navigationHandler, /fetch\(event\.request\)/);
   assert.match(navigationHandler, /caches\.match\(event\.request\)/);
   assert.match(navigationHandler, /caches\.match\(['"]\/index\.html['"]\)/);
-  assert.ok(source.indexOf("if (event.request.mode === 'navigate')") < source.indexOf('caches.match(event.request)'));
+  assert.ok(source.indexOf("if (event.request.mode === 'navigate')") < source.indexOf('// Static assets remain cache-first'));
 });
 
 test('service worker does not precache large model or runtime assets', () => {
