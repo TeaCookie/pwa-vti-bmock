@@ -35,6 +35,68 @@
     return { x, y };
   }
 
+  function createSpeechInput(options = {}) {
+    const root = options.root;
+    const input = options.input;
+    const onState = typeof options.onState === 'function' ? options.onState : () => {};
+    const onError = typeof options.onError === 'function' ? options.onError : () => {};
+    if (!root || !input) throw new TypeError('A window-like root and editable input are required.');
+    const Recognition = root.SpeechRecognition || root.webkitSpeechRecognition;
+    if (typeof Recognition !== 'function') {
+      onState('unsupported');
+      return Object.freeze({ supported: false, start: () => false, stop: () => false });
+    }
+    const recognition = new Recognition();
+    recognition.lang = options.lang || (root.navigator && root.navigator.language) || 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    let active = false;
+    recognition.onstart = () => { active = true; onState('listening'); };
+    recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = event.resultIndex || 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal && result[0] && typeof result[0].transcript === 'string') transcript += result[0].transcript;
+      }
+      if (transcript.trim()) {
+        const existing = input.value.trimEnd();
+        input.value = (existing ? existing + ' ' : '') + transcript.trim();
+        input.dispatchEvent(new root.Event('input', { bubbles: true }));
+      }
+    };
+    recognition.onerror = (event) => {
+      active = false;
+      const messages = {
+        'not-allowed': 'Microphone permission was denied. Allow microphone access in your browser settings to use voice input.',
+        'service-not-allowed': 'The browser speech service is not permitted.',
+        'no-speech': 'No speech was detected. Try again.',
+        network: 'The browser speech service is unavailable. Check your connection and try again.',
+        'audio-capture': 'No microphone was available.'
+      };
+      onError(messages[event.error] || 'Speech recognition failed. Please try again.');
+      onState('idle');
+    };
+    recognition.onend = () => { active = false; onState('idle'); };
+    return Object.freeze({
+      supported: true,
+      start() {
+        if (active) { recognition.stop(); return true; }
+        try { recognition.start(); return true; }
+        catch (error) {
+          onError(error && error.name === 'NotAllowedError'
+            ? 'Microphone permission was denied.'
+            : 'Could not start speech recognition. Please try again.');
+          return false;
+        }
+      },
+      stop() {
+        if (!active) return false;
+        recognition.stop();
+        return true;
+      }
+    });
+  }
+
   function createAssistantUI(doc) {
     const launcher = doc.getElementById('needleAssistantLauncher');
     const panel = doc.getElementById('needleAssistantPanel');
@@ -44,6 +106,7 @@
     const status = doc.getElementById('needleAssistantStatus');
     const error = doc.getElementById('needleAssistantError');
     const closeButton = doc.getElementById('needleAssistantClose');
+    const micButton = doc.getElementById('needleAssistantMic');
 
     if (!launcher || !panel || !form || !input || !output || !status || !error || !closeButton) {
       return null;
@@ -213,6 +276,24 @@
       input.focus();
     });
 
+    const speech = createSpeechInput({
+      root, input,
+      onState(state) {
+        if (!micButton) return;
+        micButton.setAttribute('aria-pressed', String(state === 'listening'));
+        micButton.textContent = state === 'listening' ? 'Stop' : 'Mic';
+        micButton.disabled = state === 'unsupported';
+        micButton.title = state === 'unsupported' ? 'Speech recognition is not supported by this browser' : 'Use speech to enter editable text';
+      },
+      onError(message) {
+        error.textContent = message;
+        error.hidden = false;
+      }
+    });
+    if (micButton) micButton.addEventListener('click', () => {
+      error.hidden = true;
+      speech.start();
+    });
     closeButton.addEventListener('click', () => closePanel());
     doc.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && isOpen) closePanel();
@@ -295,7 +376,7 @@
     return Object.freeze({ open: openPanel, close: closePanel, reposition: placeLauncher });
   }
 
-  const api = Object.freeze({ clamp, getDockPosition, getPanelPosition, createAssistantUI });
+  const api = Object.freeze({ clamp, getDockPosition, getPanelPosition, createSpeechInput, createAssistantUI });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) root.NeedleAssistantUI = api;
   if (root && root.document) {
