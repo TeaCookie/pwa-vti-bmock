@@ -219,6 +219,30 @@
 }
 
 #needleAssistantPanel .needle-assistant-send:hover { background: #2084ca; }
+#needleAssistantPanel .needle-assistant-mic {
+  min-width: 54px;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid #526a83;
+  border-radius: 9px;
+  color: #eaf1fb;
+  background: #263b53;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+#needleAssistantPanel .needle-assistant-mic[aria-pressed='true'] {
+  border-color: #d39b54;
+  background: #60431f;
+}
+#needleAssistantPanel .needle-assistant-voice-note {
+  margin: 0;
+  padding: 0 12px 10px;
+  color: #91a6bd;
+  background: #142237;
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
 #needleAssistantPanel button:disabled { opacity: 0.55; cursor: not-allowed; }
 
 @media (max-width: 520px) {
